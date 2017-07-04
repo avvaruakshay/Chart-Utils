@@ -1,0 +1,8 @@
+Implementation of reusable charts
+  - Options to be intialised
+    - 
+
+  - Updatable options in a chart
+    - Changes in the data
+    - Changes directed from the legend
+    - Respond to window resize

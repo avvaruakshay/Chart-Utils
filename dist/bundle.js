@@ -59,7 +59,7 @@
 /******/ 	
 /******/ 	
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "b3e5fe9c047b736eafa9"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "0e9ad45af1db7d24b584"; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentParents = []; // eslint-disable-line no-unused-vars
@@ -706,7 +706,7 @@
 /******/ 	__webpack_require__.h = function() { return hotCurrentHash; };
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return hotCreateRequire(2)(__webpack_require__.s = 2);
+/******/ 	return hotCreateRequire(3)(__webpack_require__.s = 3);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -17583,6 +17583,229 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
 /***/ }),
 /* 1 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return stackChart; });
+/* unused harmony export stackData */
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__chartUtils_js__ = __webpack_require__(6);
+
+
+const d3 = __webpack_require__(0);
+
+
+
+const stackData = function () {};
+
+const stackChart = function () {
+
+    /* Data format
+        basic : List of Objects
+        sub : Each Object has [key: value] data pairs for all the keys being used for the stacks.
+              If any of the keys is absent in any object the data for that key would be preseved as 0 in that particula object.
+     */
+    let data = [];
+    let width = '80vw'; // Add to customizable options
+    let height = '80vh'; // Add to customizable options
+    let margin = { top: 20, right: 20, bottom: 40, left: 40 }; // Add to customizable options
+    let xLabel = 'X-axis';
+    let yLabel = 'Y-axis';
+
+    let keys;
+    let color = {}; // Add to customizable options
+    let colors = [];
+
+    // Functions to update the Chart --------------------------------------------------------------
+    let updateData;
+
+    let chart = function (selection) {
+
+        // Data check for presence of all the keys in each Object.
+        data = _.map(data, d => {
+            for (let key in keys) {
+                key = keys[key];if (!(key in d)) {
+                    d[key] = 0;
+                }
+            }return d;
+        });
+
+        const svg = selection.append('svg').attr('height', height).attr('width', width).attr('id', 'stack-chart').attr('class', 'stack');
+        let plotData = d3.stack().keys(keys)(data);
+
+        let yMax = _.max(_.flattenDeep(plotData));
+        let yMin = _.min(_.flattenDeep(plotData));
+        let xticks = _.map(data, o => {
+            return parseInt(o['repLen']);
+        }).sort();
+
+        plotData = _.flatMap(plotData, function (d) {
+            d = _.map(d, function (o) {
+                o.key = d.key;return o;
+            });return d;
+        });
+        colors = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["a" /* colorPalette */])(keys.length, 700);
+        for (let c in colors) {
+            color[keys[c]] = colors[c];
+        }
+
+        let svgH = parseInt(svg.style('height').substr(0, svg.style('height').length - 2));
+        let svgW = parseInt(svg.style('width').substr(0, svg.style('width').length - 2));
+
+        let plotH = svgH - margin.top - margin.bottom; // Calculating the actual width of the plot
+        let plotW = svgW - margin.left - margin.right; // Calculating the actual height of the plot
+        let plotStartx = margin.left; // X-coordinate of the start of the plot
+        let plotStarty = margin.top; // Y-coordinate of the start of the plot
+
+        /* --  Defining the scale for X-axis ------------------------------------ */
+        let xScale = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["b" /* scale */])({
+            domain: xticks,
+            range: [plotStartx, plotStartx + plotW],
+            scaleType: 'band',
+            padding: 0,
+            align: 0
+        });
+
+        /* -- Defining and Callling X-axis -------------------------------------- */
+        let xAxis = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["c" /* axis */])({
+            scale: xScale,
+            orient: 'bottom'
+        });
+
+        let xAxisElement = svg.append('g').attr('class', 'stack x axis').attr('transform', 'translate(0,' + (plotStarty + plotH) + ')');
+
+        /* -- Defining scale for Y-axis ----------------------------------------- */
+        let yScale = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["b" /* scale */])({
+            domain: [yMin, yMax],
+            range: [plotH + plotStarty, plotStarty],
+            scaleType: 'linear'
+        });
+
+        /* -- Defining and Calling Y-axis --------------------------------------- */
+        let yAxis = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["c" /* axis */])({
+            scale: yScale,
+            ticks: 4,
+            tickformat: 'thousands'
+        });
+
+        let yAxisElement = svg.append('g').attr('class', 'stack y axis').attr('transform', 'translate(' + margin.left + ', 0)');
+
+        const plotCanvas = svg.append('g').attr('id', 'stack-plotCanvas');
+
+        let transition = 1000;
+
+        const draw = function () {
+
+            svg.select('.stack.x.axis').call(xAxis);
+            svg.select('.stack.y.axis').call(yAxis);
+
+            let barWidth;
+            if (xScale.bandwidth() <= 100) {
+                barWidth = xScale.bandwidth();
+            } else {
+                barWidth = 100;
+            }
+
+            /* -- Plotting the BARS ------------------------------------------------- */
+
+            const stackFigure = plotCanvas.selectAll('rect').data(plotData);
+
+            stackFigure.exit().transition().duration(100).remove();
+
+            stackFigure.attr('x', function (d) {
+                return xScale(d.data.repLen) + xScale.bandwidth() / 2 - barWidth / 2;
+            }).attr('height', 0).attr('y', function (d) {
+                return yScale(yMin);
+            }).attr('fill', function (d) {
+                return color[d.key];
+            }).transition().duration(transition).attr('y', function (d) {
+                return yScale(d[1]);
+            }).attr('height', function (d) {
+                return yScale(d[0]) - yScale(d[1]);
+            }).attr('width', xScale.bandwidth());
+
+            stackFigure.enter().append('rect').attr('class', 'stack-bar').attr('x', function (d) {
+                return xScale(d.data.repLen) + xScale.bandwidth() / 2 - barWidth / 2;
+            }).attr('y', function (d) {
+                return yScale(yMin);
+            }).attr('fill', function (d) {
+                return color[d.key];
+            }).transition().duration(transition).attr('y', function (d) {
+                return yScale(d[1]);
+            }).attr('width', xScale.bandwidth()).attr('height', function (d) {
+                return yScale(d[0]) - yScale(d[1]);
+            });
+        };
+
+        updateData = function () {
+            transition = 1000;
+            // Data check for presence of all the keys in each Object.
+            data = _.map(data, d => {
+                for (let key in keys) {
+                    key = keys[key];if (!(key in d)) {
+                        d[key] = 0;
+                    }
+                }return d;
+            });
+            plotData = d3.stack().keys(keys)(data);
+            yMax = _.max(_.flattenDeep(plotData));
+            yMin = _.min(_.flattenDeep(plotData));
+            xticks = _.map(data, o => {
+                return parseInt(o['repLen']);
+            }).sort();
+
+            xScale.domain(xticks);
+            yScale.domain([yMin, yMax]);
+
+            plotData = _.flatMap(plotData, function (d) {
+                d = _.map(d, function (o) {
+                    o.key = d.key;return o;
+                });return d;
+            });
+            draw();
+        };
+
+        const updateResize = function () {
+            transition = 0;
+            svgH = parseInt(svg.style('height').substr(0, svg.style('height').length - 2));
+            svgW = parseInt(svg.style('width').substr(0, svg.style('width').length - 2));
+
+            plotH = svgH - margin.top - margin.bottom; // Calculating the actual width of the plot
+            plotW = svgW - margin.left - margin.right; // Calculating the actual height of the plot
+
+            xScale.range([plotStartx, plotStartx + plotW]);
+            yScale.range([plotH + plotStarty, plotStarty]);
+
+            yAxisElement.attr('transform', 'translate(' + margin.left + ', 0)');
+            xAxisElement.attr('transform', 'translate(0,' + (plotStarty + plotH) + ')');
+
+            draw();
+        };
+
+        window.onresize = _.debounce(updateResize, 300);
+
+        draw();
+    };
+
+    chart.data = function (_) {
+        if (!arguments.length) return data;
+        data = _;
+        if (typeof updateData === 'function') updateData();
+        return chart;
+    };
+
+    chart.keys = function (_) {
+        if (!arguments.length) return keys;
+        keys = _;
+        return chart;
+    };
+
+    return chart;
+};
+
+
+
+/***/ }),
+/* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global, module) {var __WEBPACK_AMD_DEFINE_RESULT__;/**
@@ -34671,25 +34894,55 @@ Object.defineProperty(exports, '__esModule', { value: true });
   }
 }.call(this));
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3), __webpack_require__(4)(module)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4), __webpack_require__(5)(module)))
 
 /***/ }),
-/* 2 */
+/* 3 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__stackChart_js__ = __webpack_require__(5);
-const _ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__stackChart_js__ = __webpack_require__(1);
+const _ = __webpack_require__(2);
 const d3 = __webpack_require__(0);
 
 
 
-const chartRoot = d3.select('#main').append('svg').attr('height', '80vh').attr('width', '80vw').attr('id', 'chartRoot');
-__webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__stackChart_js__["a" /* stackChart */])();
+d3.tsv('../data/data.tsv', function (data) {
+    let keys = _.uniq(_.map(data, d => {
+        return d.repEnd;
+    }));
+
+    data = _.map(data, o => {
+        o[o['repEnd']] = parseInt(o['freq']);
+        delete o['repEnd'];
+        delete o['freq'];
+        return o;
+    });
+    data = _.map(_.groupBy(data, o => {
+        return o['repLen'];
+    }), d => {
+        let obj = {};
+        for (let a in d) {
+            a = d[a];for (let b in a) {
+                obj[b] = a[b];
+            }
+        }
+        return obj;
+    });
+
+    const chartRoot = d3.select('#main');
+    const newStackedChart = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__stackChart_js__["a" /* stackChart */])().data(data).keys(keys);
+    chartRoot.call(newStackedChart);
+
+    window.onclick = function () {
+        data = data.slice(2, data.length);
+        newStackedChart.data(data);
+    };
+});
 
 /***/ }),
-/* 3 */
+/* 4 */
 /***/ (function(module, exports) {
 
 var g;
@@ -34716,7 +34969,7 @@ module.exports = g;
 
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, exports) {
 
 module.exports = function(module) {
@@ -34744,18 +34997,663 @@ module.exports = function(module) {
 
 
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return stackChart; });
-/* unused harmony export stackData */
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return scale; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "c", function() { return axis; });
+/* unused harmony export axislabel */
+/* unused harmony export rotateXticks */
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return colorPalette; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__utils_js__ = __webpack_require__(7);
+
+
 const d3 = __webpack_require__(0);
+const _ = __webpack_require__(2);
 
-const stackData = function () {};
 
-const stackChart = function () {
-    alert('Stack Called!');
+const colorPalette = function (num, intensity) {
+    let color = {
+
+        "Blue": {
+            "50": "#E3F2FD",
+            "100": "#BBDEFB",
+            "200": "#90CAF9",
+            "300": "#64B5F6",
+            "400": "#42A5F5",
+            "500": "#2196F3",
+            "600": "#1E88E5",
+            "700": "#1976D2",
+            "800": "#1565C0",
+            "900": "#0D47A1",
+            "A100": "#82B1FF",
+            "A200": "#448AFF",
+            "A400": "#2979FF",
+            "A700": "#2962FF"
+        },
+
+        "Light Green": {
+            "50": "#F1F8E9",
+            "100": "#DCEDC8",
+            "200": "#C5E1A5",
+            "300": "#AED581",
+            "400": "#9CCC65",
+            "500": "#8BC34A",
+            "600": "#7CB342",
+            "700": "#689F38",
+            "800": "#558B2F",
+            "900": "#33691E",
+            "A100": "#CCFF90",
+            "A200": "#B2FF59",
+            "A400": "#76FF03",
+            "A700": "#64DD17"
+        },
+
+        "Orange": {
+            "50": "#FFF3E0",
+            "100": "#FFE0B2",
+            "200": "#FFCC80",
+            "300": "#FFB74D",
+            "400": "#FFA726",
+            "500": "#FF9800",
+            "600": "#FB8C00",
+            "700": "#F57C00",
+            "800": "#EF6C00",
+            "900": "#E65100",
+            "A100": "#FFD180",
+            "A200": "#FFAB40",
+            "A400": "#FF9100",
+            "A700": "#FF6D00"
+        },
+
+        "Pink": {
+            "50": "#FCE4EC",
+            "100": "#F8BBD0",
+            "200": "#F48FB1",
+            "300": "#F06292",
+            "400": "#EC407A",
+            "500": "#E91E63",
+            "600": "#D81B60",
+            "700": "#C2185B",
+            "800": "#AD1457",
+            "900": "#880E4F",
+            "A100": "#FF80AB",
+            "A200": "#FF4081",
+            "A400": "#F50057",
+            "A700": "#C51162"
+        },
+
+        "Amber": {
+            "50": "#FFF8E1",
+            "100": "#FFECB3",
+            "200": "#FFE082",
+            "300": "#FFD54F",
+            "400": "#FFCA28",
+            "500": "#FFC107",
+            "600": "#FFB300",
+            "700": "#FFA000",
+            "800": "#FF8F00",
+            "900": "#FF6F00",
+            "A100": "#FFE57F",
+            "A200": "#FFD740",
+            "A400": "#FFC400",
+            "A700": "#FFAB00"
+        },
+
+        "Green": {
+            "50": "#E8F5E9",
+            "100": "#C8E6C9",
+            "200": "#A5D6A7",
+            "300": "#81C784",
+            "400": "#66BB6A",
+            "500": "#4CAF50",
+            "600": "#43A047",
+            "700": "#388E3C",
+            "800": "#2E7D32",
+            "900": "#1B5E20",
+            "A100": "#B9F6CA",
+            "A200": "#69F0AE",
+            "A400": "#00E676",
+            "A700": "#00C853"
+        },
+
+        "Cyan": {
+            "50": "#E0F7FA",
+            "100": "#B2EBF2",
+            "200": "#80DEEA",
+            "300": "#4DD0E1",
+            "400": "#26C6DA",
+            "500": "#00BCD4",
+            "600": "#00ACC1",
+            "700": "#0097A7",
+            "800": "#00838F",
+            "900": "#006064",
+            "A100": "#84FFFF",
+            "A200": "#18FFFF",
+            "A400": "#00E5FF",
+            "A700": "#00B8D4"
+        },
+
+        "Red": {
+            "50": "#FFEBEE",
+            "100": "#FFCDD2",
+            "200": "#EF9A9A",
+            "300": "#E57373",
+            "400": "#EF5350",
+            "500": "#F44336",
+            "600": "#E53935",
+            "700": "#D32F2F",
+            "800": "#C62828",
+            "900": "#B71C1C",
+            "A100": "#FF8A80",
+            "A200": "#FF5252",
+            "A400": "#FF1744",
+            "A700": "#D50000"
+        },
+
+        "Indigo": {
+            "50": "#E8EAF6",
+            "100": "#C5CAE9",
+            "200": "#9FA8DA",
+            "300": "#7986CB",
+            "400": "#5C6BC0",
+            "500": "#3F51B5",
+            "600": "#3949AB",
+            "700": "#303F9F",
+            "800": "#283593",
+            "900": "#1A237E",
+            "A100": "#8C9EFF",
+            "A200": "#536DFE",
+            "A400": "#3D5AFE",
+            "A700": "#304FFE"
+        },
+
+        "Purple": {
+            "50": "#F3E5F5",
+            "100": "#E1BEE7",
+            "200": "#CE93D8",
+            "300": "#BA68C8",
+            "400": "#AB47BC",
+            "500": "#9C27B0",
+            "600": "#8E24AA",
+            "700": "#7B1FA2",
+            "800": "#6A1B9A",
+            "900": "#4A148C",
+            "A100": "#EA80FC",
+            "A200": "#E040FB",
+            "A400": "#D500F9",
+            "A700": "#AA00FF"
+        },
+
+        "Deep Purple": {
+            "50": "#EDE7F6",
+            "100": "#D1C4E9",
+            "200": "#B39DDB",
+            "300": "#9575CD",
+            "400": "#7E57C2",
+            "500": "#673AB7",
+            "600": "#5E35B1",
+            "700": "#512DA8",
+            "800": "#4527A0",
+            "900": "#311B92",
+            "A100": "#B388FF",
+            "A200": "#7C4DFF",
+            "A400": "#651FFF",
+            "A700": "#6200EA"
+        },
+
+        "Light Blue": {
+            "50": "#E1F5FE",
+            "100": "#B3E5FC",
+            "200": "#81D4FA",
+            "300": "#4FC3F7",
+            "400": "#29B6F6",
+            "500": "#03A9F4",
+            "600": "#039BE5",
+            "700": "#0288D1",
+            "800": "#0277BD",
+            "900": "#01579B",
+            "A100": "#80D8FF",
+            "A200": "#40C4FF",
+            "A400": "#00B0FF",
+            "A700": "#0091EA"
+        },
+
+        "Teal": {
+            "50": "#E0F2F1",
+            "100": "#B2DFDB",
+            "200": "#80CBC4",
+            "300": "#4DB6AC",
+            "400": "#26A69A",
+            "500": "#009688",
+            "600": "#00897B",
+            "700": "#00796B",
+            "800": "#00695C",
+            "900": "#004D40",
+            "A100": "#A7FFEB",
+            "A200": "#64FFDA",
+            "A400": "#1DE9B6",
+            "A700": "#00BFA5"
+        },
+
+        "Lime": {
+            "50": "#F9FBE7",
+            "100": "#F0F4C3",
+            "200": "#E6EE9C",
+            "300": "#DCE775",
+            "400": "#D4E157",
+            "500": "#CDDC39",
+            "600": "#C0CA33",
+            "700": "#AFB42B",
+            "800": "#9E9D24",
+            "900": "#827717",
+            "A100": "#F4FF81",
+            "A200": "#EEFF41",
+            "A400": "#C6FF00",
+            "A700": "#AEEA00"
+        },
+
+        "Yellow": {
+            "50": "#FFFDE7",
+            "100": "#FFF9C4",
+            "200": "#FFF59D",
+            "300": "#FFF176",
+            "400": "#FFEE58",
+            "500": "#FFEB3B",
+            "600": "#FDD835",
+            "700": "#FBC02D",
+            "800": "#F9A825",
+            "900": "#F57F17",
+            "A100": "#FFFF8D",
+            "A200": "#FFFF00",
+            "A400": "#FFEA00",
+            "A700": "#FFD600"
+        },
+
+        "Deep Orange": {
+            "50": "#FBE9E7",
+            "100": "#FFCCBC",
+            "200": "#FFAB91",
+            "300": "#FF8A65",
+            "400": "#FF7043",
+            "500": "#FF5722",
+            "600": "#F4511E",
+            "700": "#E64A19",
+            "800": "#D84315",
+            "900": "#BF360C",
+            "A100": "#FF9E80",
+            "A200": "#FF6E40",
+            "A400": "#FF3D00",
+            "A700": "#DD2C00"
+        },
+
+        "Brown": {
+            "50": "#EFEBE9",
+            "100": "#D7CCC8",
+            "200": "#BCAAA4",
+            "300": "#A1887F",
+            "400": "#8D6E63",
+            "500": "#795548",
+            "600": "#6D4C41",
+            "700": "#5D4037",
+            "800": "#4E342E",
+            "900": "#3E2723"
+        },
+
+        "Grey": {
+            "50": "#FAFAFA",
+            "100": "#F5F5F5",
+            "200": "#EEEEEE",
+            "300": "#E0E0E0",
+            "400": "#BDBDBD",
+            "500": "#9E9E9E",
+            "600": "#757575",
+            "700": "#616161",
+            "800": "#424242",
+            "900": "#212121"
+        },
+
+        "Blue Grey": {
+            "50": "#ECEFF1",
+            "100": "#CFD8DC",
+            "200": "#B0BEC5",
+            "300": "#90A4AE",
+            "400": "#78909C",
+            "500": "#607D8B",
+            "600": "#546E7A",
+            "700": "#455A64",
+            "800": "#37474F",
+            "900": "#263238"
+        }
+
+    };
+
+    console.log(Object.keys(color));
+
+    let outputPalette = [];
+    let colorKeys = Object.keys(color);
+
+    for (let i in _.range(num)) {
+        let keyColor = colorKeys[i];
+        outputPalette.push(color[keyColor][intensity]);
+    }
+
+    return outputPalette;
+};
+
+const scale = function (Obj) {
+    let scale;
+
+    const domain = Obj.domain;
+    const range = Obj.range;
+    const type = Obj.scaleType ? Obj.scaleType : 'linear';
+    const padding = Obj.padding ? Obj.padding : 0.25;
+    const align = Obj.align ? Obj.align : 0.5;
+
+    // Type of the scale is Linear
+    if (type === 'linear') {
+        scale = d3.scaleLinear().domain(domain).range(range);
+    }
+
+    // Type of the scale is Ordinal
+    else if (type === 'ordinal') {
+            const ordinalrange = _.range(range[0], range[1] + 1, (range[1] - range[0]) / (domain.length - 1));
+            scale = d3.scaleOrdinal().domain(domain).range(ordinalrange);
+        }
+
+        // Type of scale is Band scale
+        else if (type === 'band') {
+                scale = d3.scaleBand().domain(domain).range(range).padding([padding]).align([align]);
+            }
+
+    return scale;
+};
+
+const axis = function (Obj) {
+
+    let axis;
+    let ticks;
+    const scale = Obj.scale;
+    const orient = Obj.orient ? Obj.orient : 'left';
+
+    // Orientation of axis
+    if (orient === 'bottom') {
+        axis = d3.axisBottom(scale);
+    } else if (orient === 'top') {
+        axis = d3.axisTop(scale);
+    } else if (orient === 'left') {
+        axis = d3.axisLeft(scale);
+    } else if (orient === 'right') {
+        axis = d3.axisRight(scale);
+    }
+
+    // Customising for number of ticks or the Tick values
+    if (Obj.hasOwnProperty('ticks')) {
+        ticks = Obj.ticks;
+        if (typeof ticks === 'number') {
+            axis = axis.ticks(ticks);
+        } else if (ticks instanceof Array) {
+            axis = axis.tickValues(ticks);
+        }
+    }
+
+    // Specifying the tickFormat
+    if (Obj.hasOwnProperty('tickformat')) {
+        let tickFormat = Obj.tickformat;
+        if (tickFormat === 'percent' || tickFormat === 'percentage') {
+            axis = axis.tickFormat('0.1%');
+        }
+
+        if (tickFormat == 'thousands') {
+            axis = axis.tickFormat(function (d) {
+                d = d / 1000 + "K";
+                return d;
+            });
+        }
+    }
+
+    return axis;
+};
+
+const axiStyle = function (Obj) {
+
+    const rotate = Obj.rotate ? Obj.rotate : 0;
+};
+
+const axislabel = function (Obj) {
+    let padding;
+    let translateX;
+    let translateY;
+    let rotate;
+    const axisSelector = Obj.selector;
+    const axisOrient = Obj.orient;
+    const text = Obj.text;
+    // const side = (Obj.side) ? Obj.side : 'outside';
+    const position = Obj.position ? Obj.position : 'center';
+    const distance = Obj.distance ? Obj.distance : 8;
+    const size = Obj.size ? Obj.size : 10;
+    const fontweight = Obj.fontweight ? Obj.fontweight : 'light';
+    const margin = Obj.margin;
+
+    const axisNode = document.querySelector(axisSelector);
+    const translateString = axisNode.getAttribute('transform');
+    const axisbox = axisNode.getBBox();
+    const translate = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__utils_js__["a" /* getTranslateValue */])(translateString);
+    console.log(translate[1]);
+    // if (side === 'outside') {padding = distance;}
+    // else if (side === 'inside') {padding = -distance;}
+
+    if (axisOrient === 'left') {
+        translateX = translate[0] - axisbox.width - distance;
+        translateY = translate[1] + axisbox.height / 2;
+        rotate = -90;
+    } else if (axisOrient === 'right') {
+        translateX = translate[0] + axisbox.width + distance;
+        translateY = translate[1] + axisbox.height / 2;
+        rotate = -90;
+    } else if (axisOrient === 'top') {
+        translateX = translate[0] + axisbox.width / 2;
+        translateY = translate[1] - axisbox.height - distance;
+        rotate = 0;
+    } else if (axisOrient === 'bottom') {
+        translateX = translate[0] + axisbox.width / 2;
+        translateY = translate[1] + axisbox.height + distance;
+        rotate = 0;
+    }
+
+    const parentNode = axisNode.parentElement.id;
+    d3.select("#" + parentNode).append('g').attr('class', 'axislabel').append('text').attr('class', 'labelText').attr('transform', 'translate(' + translateX + ', ' + translateY + ') rotate(' + rotate + ')').style('font-size', size).style('font-weight', fontweight).style('text-anchor', 'center').text(text);
+};
+
+const rotateXticks = function (Obj) {
+    const axisSelector = Obj.axisSelector;
+    const tick = axisSelector + ' > .tick > text';
+    const angle = Obj.angle; //Currently Allowed angles are 45 and 90
+
+    if (angle === 90) {
+        d3.selectAll(tick).attr('x', -12).attr('y', 0).attr('dy', '0.35em').style('text-anchor', 'center').attr('transform', 'rotate(-90)');
+    } else if (angle != 0) {
+        d3.selectAll(tick).attr('x', -6).attr('y', 6).style('text-anchor', 'end').attr('transform', 'rotate(-45)');
+    }
+};
+
+const zoombehavior = function (Obj) {};
+
+
+
+/***/ }),
+/* 7 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return getTranslateValue; });
+
+
+// let colorPalette = ["#3366cc", "#dc3912", "#ff9900", "#109618", "#0099c6", "#dd4477", "#66aa00", "#b82e2e"].concat(colorbrewer.Paired[12]);
+
+let colorPalette = ["#3366cc", "#dc3912", "#ff9900", "#109618", "#0099c6", "#dd4477", "#66aa00", "#b82e2e", "#316395", "#994499", "#22aa99", "#aaaa11", "#6633cc", "#e67300", "#8b0707", "#651067", "#329262", "#5574a6", "#3b3eac", "#990099"];
+let baseColor = colorPalette[4];
+const _ = __webpack_require__(2);
+
+const getParent = function (level) {
+    let parent;
+    if (level == 'Kingdom' || level == 'Group') {
+        parent = 'Kingdom';
+    } else if (level == 'SubGroup') {
+        parent = 'Group';
+    } else if (level == 'Organism') {
+        parent = 'SubGroup';
+    }
+    return parent;
+};
+
+const getSubLevel = function (level) {
+    let sublevel;
+    if (level == 'GOD') {
+        sublevel = 'Kingdom';
+    } else if (level == 'Kingdom') {
+        sublevel = 'Group';
+    } else if (level == 'Group') {
+        sublevel = 'SubGroup';
+    } else if (level == 'SubGroup') {
+        sublevel = 'Organism';
+    }
+    return sublevel;
+};
+
+/*-- Defining Custom Errors ---------------------------------------*/
+const UnImplementedError = function (name = "ImplementationError", message = "") {
+    // Error.apply(this, arguments);
+    this.name = name;
+    this.message = message;
+};
+UnImplementedError.prototype = Object.create(Error.prototype);
+
+/*-- Getting Translate vector parameters from the TranslateString ------------*/
+const getTranslateValue = function (translateString) {
+
+    const x1 = translateString.indexOf("(");
+    const x2 = translateString.indexOf(",");
+    const resx = parseInt(translateString.slice(x1 + 1, x2));
+
+    const y1 = translateString.indexOf(",");
+    const y2 = translateString.indexOf(")");
+
+    const resy = parseInt(translateString.slice(y1 + 1, y2));
+
+    return [resx, resy];
+};
+
+/*-- Getting Maximum Limit for axis ------------------------------------------*/
+const get_maxcod = function (ymax) {
+
+    if (ymax < 10) {
+        ymax = Math.ceil(ymax);
+    } else if (ymax <= 100) {
+        ymax = Math.ceil(ymax / 10) * 10 + 30;
+    } else if (ymax <= 1000) {
+        ymax = Math.ceil(ymax / 100) * 100 + 100;
+    } else if (ymax <= 10000) {
+        ymax = Math.ceil(ymax / 100) * 100 + 500;
+    } else if (ymax <= 100000) {
+        ymax = Math.ceil(ymax / 1000) * 1000 + 1000;
+    } else if (100000 < ymax) {
+        ymax = Math.ceil(ymax / 10000) * 10000 + 5000;
+    }
+    return ymax;
+};
+
+/*-- Getting Unique Elements of a column -------------------------------------*/
+const getUniqueElements = function (data, level) {
+    return _.chain(data).pluck(level).unique().compact().value();
+};
+
+/*-- Getting Matching Rows based on a Column Value ---------------------------*/
+const getMatchingRows = function (data, level, target) {
+    var matching_data = _.map(data, function (d) {
+        if (d[level] == target) {
+            return d;
+        }
+    });
+    return matching_data.filter(Boolean);
+};
+
+/*-- Get the matching column -------------------------------------------------*/
+const getMatchingColumn = function (data, column) {
+    var matcing_data = _.map(data, function (d) {
+        return d[column];
+    });
+
+    return matcing_data;
+};
+
+/* -- Sort data by Column --------------------------------------------------- */
+const sortByColumn = function (data, column, reverse) {
+    const result = reverse ? _.sortBy(data, function (d) {
+        return d.column;
+    }) : _.sortBy(data, function (d) {
+        return d.column;
+    }).reverse();
+};
+
+/*-- Populating Data Table ---------------------------------------------------*/
+const populateDataTable = function (data) {
+
+    dataTable.destroy();
+
+    d3.select('#data-table').select('tbody').selectAll('tr').remove();
+
+    const columns = ['Organism', 'Kingdom', 'Group', 'SubGroup', 'Size(Mb)', 'GC%', 'Genes', 'Proteins'];
+    const dataRow = d3.select('#data-table').select('tbody').selectAll('tr').data(data).enter().append('tr');
+
+    for (let c in columns) {
+        let column = columns[c];
+        dataRow.append('td').append('text').text(function (d) {
+            return d[column];
+        });
+    }
+
+    dataTable = $('#data-table').DataTable();
+};
+
+/* -- Creating Color based on Data ------------------------------------------ */
+const setCurrentPalette = function (data, val, level) {
+    let barPalette = {};
+    let scatterPalette = {};
+    const levelElements = getUniqueElements(data, level);
+    const parentElements = getUniqueElements(data, getParent(level));
+    if (level === 'Kingdom') {
+        labels = levelElements;
+        for (let c in labels) {
+            let label = labels[c];
+            barPalette[label] = baseColor;
+            scatterPalette[label] = colorPalette[c % colorPalette.length];
+        }
+    } else {
+        if (parentElements.length === 1) {
+            labels = levelElements;
+            for (let a in labels) {
+                let label = labels[a];
+                barPalette[label] = baseColor;
+                scatterPalette[label] = colorPalette[a % colorPalette.length];
+            }
+        } else {
+            labels = parentElements;
+            for (let b in labels) {
+                let label = labels[b];
+                const subElements = getUniqueElements(getMatchingRows(data, getParent(level), label), level);
+                for (let c in subElements) {
+                    c = subElements[c];
+                    scatterPalette[c] = colorPalette[b % colorPalette.length];
+                    barPalette[c] = colorPalette[b % colorPalette.length];
+                }
+            }
+        }
+    }
+
+    // console.log(barPalette, scatterPalette);
+    return [barPalette, scatterPalette];
 };
 
 
