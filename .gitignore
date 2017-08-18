@@ -1,0 +1,4 @@
+# Ignore all files in dist folder except bundle.js
+/dist/
+
+!/dist/bundle.js

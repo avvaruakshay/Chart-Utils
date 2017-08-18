@@ -8,6 +8,7 @@ d3.tsv('../data/data.tsv', function(data) {
 
     data = _.map(data, o => {
         o[o['repEnd']] = parseInt(o['freq']);
+        o['x'] = o['repLen'];
         delete o['repEnd'];
         delete o['freq'];
         return o;
@@ -19,11 +20,16 @@ d3.tsv('../data/data.tsv', function(data) {
     });
 
     const chartRoot = d3.select('#main');
-    const newStackedChart = stackChart().data(data).keys(keys);
+    const newStackedChart = stackChart().data(data).keys(keys)
+        .margin({ left: 60, top: 20, right: 20, bottom: 60 })
+        .xLabel('Repeat Length')
+        .yLabel('Frequency')
+        .labelDistance(20);
+
     chartRoot.call(newStackedChart);
 
-    window.onclick = function() {
-        data = data.slice(2, data.length);
-        newStackedChart.data(data);
-    }
+    // window.onclick = function() {
+    //     data = data.slice(2, data.length);
+    //     newStackedChart.data(data);
+    // }
 })

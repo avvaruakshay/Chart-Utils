@@ -59,7 +59,7 @@
 /******/ 	
 /******/ 	
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "0e9ad45af1db7d24b584"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "450575225f8b79db4a6f"; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentParents = []; // eslint-disable-line no-unused-vars
@@ -706,7 +706,7 @@
 /******/ 	__webpack_require__.h = function() { return hotCurrentHash; };
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return hotCreateRequire(3)(__webpack_require__.s = 3);
+/******/ 	return hotCreateRequire(4)(__webpack_require__.s = 4);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -17583,229 +17583,6 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
 /***/ }),
 /* 1 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return stackChart; });
-/* unused harmony export stackData */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__chartUtils_js__ = __webpack_require__(6);
-
-
-const d3 = __webpack_require__(0);
-
-
-
-const stackData = function () {};
-
-const stackChart = function () {
-
-    /* Data format
-        basic : List of Objects
-        sub : Each Object has [key: value] data pairs for all the keys being used for the stacks.
-              If any of the keys is absent in any object the data for that key would be preseved as 0 in that particula object.
-     */
-    let data = [];
-    let width = '80vw'; // Add to customizable options
-    let height = '80vh'; // Add to customizable options
-    let margin = { top: 20, right: 20, bottom: 40, left: 40 }; // Add to customizable options
-    let xLabel = 'X-axis';
-    let yLabel = 'Y-axis';
-
-    let keys;
-    let color = {}; // Add to customizable options
-    let colors = [];
-
-    // Functions to update the Chart --------------------------------------------------------------
-    let updateData;
-
-    let chart = function (selection) {
-
-        // Data check for presence of all the keys in each Object.
-        data = _.map(data, d => {
-            for (let key in keys) {
-                key = keys[key];if (!(key in d)) {
-                    d[key] = 0;
-                }
-            }return d;
-        });
-
-        const svg = selection.append('svg').attr('height', height).attr('width', width).attr('id', 'stack-chart').attr('class', 'stack');
-        let plotData = d3.stack().keys(keys)(data);
-
-        let yMax = _.max(_.flattenDeep(plotData));
-        let yMin = _.min(_.flattenDeep(plotData));
-        let xticks = _.map(data, o => {
-            return parseInt(o['repLen']);
-        }).sort();
-
-        plotData = _.flatMap(plotData, function (d) {
-            d = _.map(d, function (o) {
-                o.key = d.key;return o;
-            });return d;
-        });
-        colors = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["a" /* colorPalette */])(keys.length, 700);
-        for (let c in colors) {
-            color[keys[c]] = colors[c];
-        }
-
-        let svgH = parseInt(svg.style('height').substr(0, svg.style('height').length - 2));
-        let svgW = parseInt(svg.style('width').substr(0, svg.style('width').length - 2));
-
-        let plotH = svgH - margin.top - margin.bottom; // Calculating the actual width of the plot
-        let plotW = svgW - margin.left - margin.right; // Calculating the actual height of the plot
-        let plotStartx = margin.left; // X-coordinate of the start of the plot
-        let plotStarty = margin.top; // Y-coordinate of the start of the plot
-
-        /* --  Defining the scale for X-axis ------------------------------------ */
-        let xScale = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["b" /* scale */])({
-            domain: xticks,
-            range: [plotStartx, plotStartx + plotW],
-            scaleType: 'band',
-            padding: 0,
-            align: 0
-        });
-
-        /* -- Defining and Callling X-axis -------------------------------------- */
-        let xAxis = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["c" /* axis */])({
-            scale: xScale,
-            orient: 'bottom'
-        });
-
-        let xAxisElement = svg.append('g').attr('class', 'stack x axis').attr('transform', 'translate(0,' + (plotStarty + plotH) + ')');
-
-        /* -- Defining scale for Y-axis ----------------------------------------- */
-        let yScale = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["b" /* scale */])({
-            domain: [yMin, yMax],
-            range: [plotH + plotStarty, plotStarty],
-            scaleType: 'linear'
-        });
-
-        /* -- Defining and Calling Y-axis --------------------------------------- */
-        let yAxis = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["c" /* axis */])({
-            scale: yScale,
-            ticks: 4,
-            tickformat: 'thousands'
-        });
-
-        let yAxisElement = svg.append('g').attr('class', 'stack y axis').attr('transform', 'translate(' + margin.left + ', 0)');
-
-        const plotCanvas = svg.append('g').attr('id', 'stack-plotCanvas');
-
-        let transition = 1000;
-
-        const draw = function () {
-
-            svg.select('.stack.x.axis').call(xAxis);
-            svg.select('.stack.y.axis').call(yAxis);
-
-            let barWidth;
-            if (xScale.bandwidth() <= 100) {
-                barWidth = xScale.bandwidth();
-            } else {
-                barWidth = 100;
-            }
-
-            /* -- Plotting the BARS ------------------------------------------------- */
-
-            const stackFigure = plotCanvas.selectAll('rect').data(plotData);
-
-            stackFigure.exit().transition().duration(100).remove();
-
-            stackFigure.attr('x', function (d) {
-                return xScale(d.data.repLen) + xScale.bandwidth() / 2 - barWidth / 2;
-            }).attr('height', 0).attr('y', function (d) {
-                return yScale(yMin);
-            }).attr('fill', function (d) {
-                return color[d.key];
-            }).transition().duration(transition).attr('y', function (d) {
-                return yScale(d[1]);
-            }).attr('height', function (d) {
-                return yScale(d[0]) - yScale(d[1]);
-            }).attr('width', xScale.bandwidth());
-
-            stackFigure.enter().append('rect').attr('class', 'stack-bar').attr('x', function (d) {
-                return xScale(d.data.repLen) + xScale.bandwidth() / 2 - barWidth / 2;
-            }).attr('y', function (d) {
-                return yScale(yMin);
-            }).attr('fill', function (d) {
-                return color[d.key];
-            }).transition().duration(transition).attr('y', function (d) {
-                return yScale(d[1]);
-            }).attr('width', xScale.bandwidth()).attr('height', function (d) {
-                return yScale(d[0]) - yScale(d[1]);
-            });
-        };
-
-        updateData = function () {
-            transition = 1000;
-            // Data check for presence of all the keys in each Object.
-            data = _.map(data, d => {
-                for (let key in keys) {
-                    key = keys[key];if (!(key in d)) {
-                        d[key] = 0;
-                    }
-                }return d;
-            });
-            plotData = d3.stack().keys(keys)(data);
-            yMax = _.max(_.flattenDeep(plotData));
-            yMin = _.min(_.flattenDeep(plotData));
-            xticks = _.map(data, o => {
-                return parseInt(o['repLen']);
-            }).sort();
-
-            xScale.domain(xticks);
-            yScale.domain([yMin, yMax]);
-
-            plotData = _.flatMap(plotData, function (d) {
-                d = _.map(d, function (o) {
-                    o.key = d.key;return o;
-                });return d;
-            });
-            draw();
-        };
-
-        const updateResize = function () {
-            transition = 0;
-            svgH = parseInt(svg.style('height').substr(0, svg.style('height').length - 2));
-            svgW = parseInt(svg.style('width').substr(0, svg.style('width').length - 2));
-
-            plotH = svgH - margin.top - margin.bottom; // Calculating the actual width of the plot
-            plotW = svgW - margin.left - margin.right; // Calculating the actual height of the plot
-
-            xScale.range([plotStartx, plotStartx + plotW]);
-            yScale.range([plotH + plotStarty, plotStarty]);
-
-            yAxisElement.attr('transform', 'translate(' + margin.left + ', 0)');
-            xAxisElement.attr('transform', 'translate(0,' + (plotStarty + plotH) + ')');
-
-            draw();
-        };
-
-        window.onresize = _.debounce(updateResize, 300);
-
-        draw();
-    };
-
-    chart.data = function (_) {
-        if (!arguments.length) return data;
-        data = _;
-        if (typeof updateData === 'function') updateData();
-        return chart;
-    };
-
-    chart.keys = function (_) {
-        if (!arguments.length) return keys;
-        keys = _;
-        return chart;
-    };
-
-    return chart;
-};
-
-
-
-/***/ }),
-/* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* WEBPACK VAR INJECTION */(function(global, module) {var __WEBPACK_AMD_DEFINE_RESULT__;/**
@@ -34894,123 +34671,23 @@ const stackChart = function () {
   }
 }.call(this));
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(4), __webpack_require__(5)(module)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(6), __webpack_require__(7)(module)))
 
 /***/ }),
-/* 3 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__stackChart_js__ = __webpack_require__(1);
-const _ = __webpack_require__(2);
-const d3 = __webpack_require__(0);
-
-
-
-d3.tsv('../data/data.tsv', function (data) {
-    let keys = _.uniq(_.map(data, d => {
-        return d.repEnd;
-    }));
-
-    data = _.map(data, o => {
-        o[o['repEnd']] = parseInt(o['freq']);
-        delete o['repEnd'];
-        delete o['freq'];
-        return o;
-    });
-    data = _.map(_.groupBy(data, o => {
-        return o['repLen'];
-    }), d => {
-        let obj = {};
-        for (let a in d) {
-            a = d[a];for (let b in a) {
-                obj[b] = a[b];
-            }
-        }
-        return obj;
-    });
-
-    const chartRoot = d3.select('#main');
-    const newStackedChart = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__stackChart_js__["a" /* stackChart */])().data(data).keys(keys);
-    chartRoot.call(newStackedChart);
-
-    window.onclick = function () {
-        data = data.slice(2, data.length);
-        newStackedChart.data(data);
-    };
-});
-
-/***/ }),
-/* 4 */
-/***/ (function(module, exports) {
-
-var g;
-
-// This works in non-strict mode
-g = (function() {
-	return this;
-})();
-
-try {
-	// This works if eval is allowed (see CSP)
-	g = g || Function("return this")() || (1,eval)("this");
-} catch(e) {
-	// This works if the window reference is available
-	if(typeof window === "object")
-		g = window;
-}
-
-// g can still be undefined, but nothing to do about it...
-// We return undefined, instead of nothing here, so it's
-// easier to handle this case. if(!global) { ...}
-
-module.exports = g;
-
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports) {
-
-module.exports = function(module) {
-	if(!module.webpackPolyfill) {
-		module.deprecate = function() {};
-		module.paths = [];
-		// module.parent = undefined by default
-		if(!module.children) module.children = [];
-		Object.defineProperty(module, "loaded", {
-			enumerable: true,
-			get: function() {
-				return module.l;
-			}
-		});
-		Object.defineProperty(module, "id", {
-			enumerable: true,
-			get: function() {
-				return module.i;
-			}
-		});
-		module.webpackPolyfill = 1;
-	}
-	return module;
-};
-
-
-/***/ }),
-/* 6 */
+/* 2 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return scale; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "c", function() { return axis; });
-/* unused harmony export axislabel */
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "d", function() { return axislabel; });
 /* unused harmony export rotateXticks */
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return colorPalette; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__utils_js__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__utils_js__ = __webpack_require__(5);
 
 
 const d3 = __webpack_require__(0);
-const _ = __webpack_require__(2);
+const _ = __webpack_require__(1);
 
 
 const colorPalette = function (num, intensity) {
@@ -35329,8 +35006,6 @@ const colorPalette = function (num, intensity) {
 
     };
 
-    console.log(Object.keys(color));
-
     let outputPalette = [];
     let colorKeys = Object.keys(color);
 
@@ -35440,30 +35115,32 @@ const axislabel = function (Obj) {
     const translateString = axisNode.getAttribute('transform');
     const axisbox = axisNode.getBBox();
     const translate = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__utils_js__["a" /* getTranslateValue */])(translateString);
-    console.log(translate[1]);
+
+    let textAnchor = 'middle';
+
     // if (side === 'outside') {padding = distance;}
     // else if (side === 'inside') {padding = -distance;}
 
     if (axisOrient === 'left') {
         translateX = translate[0] - axisbox.width - distance;
-        translateY = translate[1] + axisbox.height / 2;
+        translateY = translate[1] + axisbox.height / 2 + axisbox.y;
         rotate = -90;
     } else if (axisOrient === 'right') {
         translateX = translate[0] + axisbox.width + distance;
-        translateY = translate[1] + axisbox.height / 2;
+        translateY = translate[1] + axisbox.height / 2 + axisbox.y;
         rotate = -90;
     } else if (axisOrient === 'top') {
-        translateX = translate[0] + axisbox.width / 2;
+        translateX = translate[0] + axisbox.width / 2 + axisbox.x;
         translateY = translate[1] - axisbox.height - distance;
         rotate = 0;
     } else if (axisOrient === 'bottom') {
-        translateX = translate[0] + axisbox.width / 2;
+        translateX = translate[0] + axisbox.width / 2 + axisbox.x;
         translateY = translate[1] + axisbox.height + distance;
         rotate = 0;
     }
 
-    const parentNode = axisNode.parentElement.id;
-    d3.select("#" + parentNode).append('g').attr('class', 'axislabel').append('text').attr('class', 'labelText').attr('transform', 'translate(' + translateX + ', ' + translateY + ') rotate(' + rotate + ')').style('font-size', size).style('font-weight', fontweight).style('text-anchor', 'center').text(text);
+    const parentNode = axisNode.parentElement;
+    d3.select(parentNode).append('g').attr('class', 'axislabel').append('text').attr('class', 'labelText').attr('transform', `translate( ${translateX}, ${translateY}) rotate(${rotate})`).style('font-size', size).style('font-weight', fontweight).style('text-anchor', textAnchor).text(text);
 };
 
 const rotateXticks = function (Obj) {
@@ -35483,7 +35160,414 @@ const zoombehavior = function (Obj) {};
 
 
 /***/ }),
-/* 7 */
+/* 3 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return stackChart; });
+/* unused harmony export stackData */
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__chartUtils_js__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__tooltip_js__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__tooltip_js___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1__tooltip_js__);
+
+
+const d3 = __webpack_require__(0);
+
+
+
+
+const stackData = function () {};
+
+/*  1. Data format
+    data type : List of Objects
+    sub : Each Object has [key: value] data pairs for all the keys being used for the stacks.
+          If any of the keys is absent in any object the data for that key would be assigned as 0 in that particular object.
+          Each Object should also have its corresponding xValue with the key 'x'
+    2. Dimensions: If given in percentage or "(vw,vh)" format, the chart will be responsive to window resize.
+    */
+
+const stackChart = function () {
+
+    // Customizable options declared outside the chart function
+    let data = [];
+    let keys;
+    let width = '80vw';
+    let height = '80vh';
+    let margin = { top: 20, right: 20, bottom: 40, left: 40 };
+
+    // Inplot customizable options
+    let xLabel;
+    let yLabel;
+    let color = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["a" /* colorPalette */])(19, 700);
+    let colorObj = {};
+    let labelDistance = 20;
+    let windowResize = true;
+
+    // Functions to update the Chart --------------------------------------------------------------
+    let updateData;
+
+    let chart = function (selection) {
+        console.log(data);
+        // Data check for presence of all the keys in each Object.
+        data = _.map(data, d => {
+            for (let key in keys) {
+                key = keys[key];if (!(key in d)) {
+                    d[key] = 0;
+                }
+            }return d;
+        });
+
+        const svg = selection.append('svg').attr('height', height).attr('width', width).attr('id', 'stack-chart').attr('class', 'stack');
+        // svg.style('font-family', 'Sans serif')
+        let plotData = d3.stack().keys(keys)(data);
+
+        let yMax = _.max(_.flattenDeep(plotData));
+        let yMin = _.min(_.flattenDeep(plotData));
+        let xticks = _.map(data, o => {
+            return parseInt(o['x']);
+        });
+
+        plotData = _.flatMap(plotData, function (d) {
+            d = _.map(d, function (o) {
+                o.key = d.key;
+                o.view = 1;
+                return o;
+            });
+            return d;
+        });
+        for (let c in color) {
+            colorObj[keys[c]] = color[c];
+        }
+
+        let svgH = parseInt(svg.style('height').substr(0, svg.style('height').length - 2));
+        let svgW = parseInt(svg.style('width').substr(0, svg.style('width').length - 2));
+
+        const legendLabelWidth = 80;
+        const labelsinLine = Math.floor((svgW - 40 - margin.left) / 70);
+        const legendLines = Math.ceil(data.length / labelsinLine);
+        const legendHeight = legendLines * 20;
+        margin.top += legendHeight;
+
+        let plotH = svgH - margin.top - margin.bottom; // Calculating the actual width of the plot
+        let plotW = svgW - margin.left - margin.right; // Calculating the actual height of the plot
+        let plotStartx = margin.left; // X-coordinate of the start of the plot
+        let plotStarty = margin.top; // Y-coordinate of the start of the plot
+
+        /* --  Defining the scale for X-axis ------------------------------------ */
+        let xScale = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["b" /* scale */])({
+            domain: xticks,
+            range: [plotStartx, plotStartx + plotW],
+            scaleType: 'band',
+            padding: 0,
+            align: 0
+        });
+
+        /* -- Defining and Callling X-axis -------------------------------------- */
+        let xAxis = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["c" /* axis */])({
+            scale: xScale,
+            orient: 'bottom'
+        });
+
+        let xAxisElement = svg.append('g').attr('class', 'stack x axis').attr('transform', 'translate(0,' + (plotStarty + plotH) + ')');
+
+        /* -- Defining scale for Y-axis ----------------------------------------- */
+        let yScale = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["b" /* scale */])({
+            domain: [yMin, yMax],
+            range: [plotH + plotStarty, plotStarty],
+            scaleType: 'linear'
+        });
+
+        /* -- Defining and Calling Y-axis --------------------------------------- */
+        let yAxis = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["c" /* axis */])({
+            scale: yScale,
+            ticks: 4,
+            tickformat: 'thousands'
+        });
+
+        let yAxisElement = svg.append('g').attr('class', 'stack y axis').attr('transform', 'translate(' + margin.left + ', 0)');
+
+        const plotCanvas = svg.append('g').attr('id', 'stack-plotCanvas');
+
+        let transition = 1000;
+
+        const draw = function () {
+
+            let currentPlotData = _.filter(plotData, o => {
+                return o.view == 1;
+            });
+
+            svg.select('.stack.x.axis').call(xAxis);
+            svg.select('.stack.y.axis').call(yAxis);
+
+            svg.selectAll('.axislabel').remove();
+
+            /* -- Adding X-axis label ----------------------------------------------- */
+            if (xLabel) {
+                __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["d" /* axislabel */])({
+                    selector: '.stack.x.axis',
+                    orient: 'bottom',
+                    fontweight: 'regular',
+                    size: '1em',
+                    distance: labelDistance,
+                    text: xLabel,
+                    margin: margin
+                });
+            }
+
+            /* -- Adding Y-axis label ----------------------------------------------- */
+            if (yLabel) {
+                __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["d" /* axislabel */])({
+                    selector: '.stack.y.axis',
+                    orient: 'left',
+                    fontweight: 'regular',
+                    size: '1em',
+                    distance: labelDistance,
+                    text: yLabel,
+                    margin: margin
+                });
+            }
+
+            let barWidth;
+            if (xScale.bandwidth() <= 100) {
+                barWidth = xScale.bandwidth();
+            } else {
+                barWidth = 100;
+            }
+
+            /* -- Plotting the BARS ------------------------------------------------- */
+
+            const stackFigure = plotCanvas.selectAll('rect').data(currentPlotData);
+
+            stackFigure.exit().transition().duration(100).remove();
+
+            stackFigure.attr('x', function (d) {
+                return xScale(d.data.x) + xScale.bandwidth() / 2 - barWidth / 2;
+            }).attr('height', 0).attr('y', function (d) {
+                return yScale(yMin);
+            }).attr('fill', function (d) {
+                return colorObj[d.key];
+            }).transition().duration(transition).attr('y', function (d) {
+                return yScale(d[1]);
+            }).attr('height', function (d) {
+                return yScale(d[0]) - yScale(d[1]);
+            }).attr('width', xScale.bandwidth());
+
+            stackFigure.enter().append('rect').attr('class', 'stack-bar').attr('x', function (d) {
+                return xScale(d.data.x) + xScale.bandwidth() / 2 - barWidth / 2;
+            }).attr('y', function (d) {
+                return yScale(yMin);
+            }).attr('fill', function (d) {
+                return colorObj[d.key];
+            }).transition().duration(transition).attr('y', function (d) {
+                return yScale(d[1]);
+            }).attr('width', xScale.bandwidth()).attr('height', function (d) {
+                return yScale(d[0]) - yScale(d[1]);
+            });
+
+            addLegend();
+        };
+
+        const addLegend = function () {
+
+            /* -- Adding Legend ----------------------------------------------------- */
+            svg.selectAll('.legend').remove();
+            let legend = svg.append("g").attr('class', 'stack legend').attr('transform', "translate(40,20)");
+
+            let legendLabel = legend.selectAll('.stack.legendLabel').data(keys).enter().append("g").attr("class", "stack legendLabel");
+
+            legendLabel.append("circle").attr("cx", function (d, i) {
+                return legendLabelWidth * (i % labelsinLine);
+            }).attr("cy", function (d, i) {
+                return (Math.ceil((i + 1) / labelsinLine) - 1) * 20;
+            }).attr("r", '5px').attr("fill", function (d) {
+                return colorObj[d];
+            }).style("cursor", "pointer").on("click", function (d, i) {
+                console.log(d);
+                // data[i]['view'] = (data[i]['view'] == 0) ? 1 : 0;
+                // const fill = (data[i]['view'] == 0) ? "white" : colorObj[d.name];
+                // const stroke = (data[i]['view'] == 0) ? colorObj[d.name] : "none";
+                // d3.select(this).attr("fill", fill).attr("stroke", stroke).attr("stroke-width", 2);
+                // updateLineChart(data);
+            });
+            // .on("dbclick", function(d, i) { console.log("double clicked!"); });
+
+            legendLabel.append("text").attr("transform", function (d, i) {
+                return `translate(${legendLabelWidth * (i % labelsinLine) + 10}, ${(Math.ceil((i + 1) / labelsinLine) - 1) * 20})`;
+            }).attr("dy", "0.35em").style("font-size", "0.8em").text(function (d) {
+                return d;
+            });
+        };
+
+        updateData = function () {
+            transition = 1000;
+            // Data check for presence of all the keys in each Object.
+            data = _.map(data, d => {
+                for (let key in keys) {
+                    key = keys[key];if (!(key in d)) {
+                        d[key] = 0;
+                    }
+                }return d;
+            });
+            plotData = d3.stack().keys(keys)(data);
+            yMax = _.max(_.flattenDeep(plotData));
+            yMin = _.min(_.flattenDeep(plotData));
+            xticks = _.map(data, o => {
+                return parseInt(o['x']);
+            }).sort();
+
+            xScale.domain(xticks);
+            yScale.domain([yMin, yMax]);
+
+            plotData = _.flatMap(plotData, function (d) {
+                d = _.map(d, function (o) {
+                    o.key = d.key;
+                    o.view = 1;
+                    return o;
+                });
+                return d;
+            });
+            draw();
+        };
+
+        const updateResize = function () {
+            transition = 0;
+            svgH = parseInt(svg.style('height').substr(0, svg.style('height').length - 2));
+            svgW = parseInt(svg.style('width').substr(0, svg.style('width').length - 2));
+
+            plotH = svgH - margin.top - margin.bottom; // Calculating the actual width of the plot
+            plotW = svgW - margin.left - margin.right; // Calculating the actual height of the plot
+
+            xScale.range([plotStartx, plotStartx + plotW]);
+            yScale.range([plotH + plotStarty, plotStarty]);
+
+            yAxisElement.attr('transform', 'translate(' + margin.left + ', 0)');
+            xAxisElement.attr('transform', 'translate(0,' + (plotStarty + plotH) + ')');
+
+            draw();
+        };
+
+        if (windowResize) {
+            window.onresize = _.debounce(updateResize, 300);
+        }
+
+        draw();
+    };
+
+    chart.data = function (_) {
+        if (!arguments.length) return data;
+        data = _;
+        if (typeof updateData === 'function') updateData();
+        return chart;
+    };
+
+    chart.keys = function (_) {
+        if (!arguments.length) return keys;
+        keys = _;
+        return chart;
+    };
+
+    chart.width = function (_) {
+        if (!arguments.length) return width;
+        width = _;
+        return chart;
+    };
+
+    chart.height = function (_) {
+        if (!arguments.length) return height;
+        height = _;
+        return chart;
+    };
+
+    chart.color = function (_) {
+        if (!arguments.length) return color;
+        color = _;
+        return chart;
+    };
+
+    chart.margin = function (_) {
+        if (!arguments.length) return margin;
+        margin = _;
+        return chart;
+    };
+
+    chart.xLabel = function (_) {
+        if (!arguments.length) return xLabel;
+        xLabel = _;
+        return chart;
+    };
+
+    chart.yLabel = function (_) {
+        if (!arguments.length) return yLabel;
+        yLabel = _;
+        return chart;
+    };
+
+    chart.labelDistance = function (_) {
+        if (!arguments.length) return labelDistance;
+        labelDistance = _;
+        return chart;
+    };
+
+    chart.windowResize = function (_) {
+        if (!arguments.length) return windowResize;
+        windowResize = _;
+        return chart;
+    };
+
+    return chart;
+};
+
+
+
+/***/ }),
+/* 4 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__stackChart_js__ = __webpack_require__(3);
+const _ = __webpack_require__(1);
+const d3 = __webpack_require__(0);
+
+
+
+d3.tsv('../data/data.tsv', function (data) {
+    let keys = _.uniq(_.map(data, d => {
+        return d.repEnd;
+    }));
+
+    data = _.map(data, o => {
+        o[o['repEnd']] = parseInt(o['freq']);
+        o['x'] = o['repLen'];
+        delete o['repEnd'];
+        delete o['freq'];
+        return o;
+    });
+    data = _.map(_.groupBy(data, o => {
+        return o['repLen'];
+    }), d => {
+        let obj = {};
+        for (let a in d) {
+            a = d[a];for (let b in a) {
+                obj[b] = a[b];
+            }
+        }
+        return obj;
+    });
+
+    const chartRoot = d3.select('#main');
+    const newStackedChart = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__stackChart_js__["a" /* stackChart */])().data(data).keys(keys).margin({ left: 60, top: 20, right: 20, bottom: 60 }).xLabel('Repeat Length').yLabel('Frequency').labelDistance(20);
+
+    chartRoot.call(newStackedChart);
+
+    // window.onclick = function() {
+    //     data = data.slice(2, data.length);
+    //     newStackedChart.data(data);
+    // }
+});
+
+/***/ }),
+/* 5 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -35494,7 +35578,7 @@ const zoombehavior = function (Obj) {};
 
 let colorPalette = ["#3366cc", "#dc3912", "#ff9900", "#109618", "#0099c6", "#dd4477", "#66aa00", "#b82e2e", "#316395", "#994499", "#22aa99", "#aaaa11", "#6633cc", "#e67300", "#8b0707", "#651067", "#329262", "#5574a6", "#3b3eac", "#990099"];
 let baseColor = colorPalette[4];
-const _ = __webpack_require__(2);
+const _ = __webpack_require__(1);
 
 const getParent = function (level) {
     let parent;
@@ -35655,6 +35739,67 @@ const setCurrentPalette = function (data, val, level) {
     // console.log(barPalette, scatterPalette);
     return [barPalette, scatterPalette];
 };
+
+
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports) {
+
+var g;
+
+// This works in non-strict mode
+g = (function() {
+	return this;
+})();
+
+try {
+	// This works if eval is allowed (see CSP)
+	g = g || Function("return this")() || (1,eval)("this");
+} catch(e) {
+	// This works if the window reference is available
+	if(typeof window === "object")
+		g = window;
+}
+
+// g can still be undefined, but nothing to do about it...
+// We return undefined, instead of nothing here, so it's
+// easier to handle this case. if(!global) { ...}
+
+module.exports = g;
+
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports) {
+
+module.exports = function(module) {
+	if(!module.webpackPolyfill) {
+		module.deprecate = function() {};
+		module.paths = [];
+		// module.parent = undefined by default
+		if(!module.children) module.children = [];
+		Object.defineProperty(module, "loaded", {
+			enumerable: true,
+			get: function() {
+				return module.l;
+			}
+		});
+		Object.defineProperty(module, "id", {
+			enumerable: true,
+			get: function() {
+				return module.i;
+			}
+		});
+		module.webpackPolyfill = 1;
+	}
+	return module;
+};
+
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports) {
 
 
 

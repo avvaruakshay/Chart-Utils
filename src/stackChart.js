@@ -5,56 +5,75 @@
 const d3 = require('d3')
 import { scale, axis, axislabel, rotateXticks } from "./chartUtils.js"
 import { colorPalette } from "./chartUtils.js"
+import { tooltip } from "./tooltip.js"
 
 
 const stackData = function() {
 
 }
 
+/*  1. Data format
+    data type : List of Objects
+    sub : Each Object has [key: value] data pairs for all the keys being used for the stacks.
+          If any of the keys is absent in any object the data for that key would be assigned as 0 in that particular object.
+          Each Object should also have its corresponding xValue with the key 'x'
+    2. Dimensions: If given in percentage or "(vw,vh)" format, the chart will be responsive to window resize.
+    */
+
 const stackChart = function() {
 
-
-    /* Data format
-        basic : List of Objects
-        sub : Each Object has [key: value] data pairs for all the keys being used for the stacks.
-              If any of the keys is absent in any object the data for that key would be preseved as 0 in that particula object.
-     */
+    // Customizable options declared outside the chart function
     let data = [];
-    let width = '80vw'; // Add to customizable options
-    let height = '80vh'; // Add to customizable options
-    let margin = { top: 20, right: 20, bottom: 40, left: 40 }; // Add to customizable options
-    let xLabel = 'X-axis';
-    let yLabel = 'Y-axis';
-
-
-
     let keys;
-    let color = {}; // Add to customizable options
-    let colors = [];
+    let width = '80vw';
+    let height = '80vh';
+    let margin = { top: 20, right: 20, bottom: 40, left: 40 };
+
+    // Inplot customizable options
+    let xLabel;
+    let yLabel;
+    let color = colorPalette(19, 700);
+    let colorObj = {};
+    let labelDistance = 20;
+    let windowResize = true;
+
 
     // Functions to update the Chart --------------------------------------------------------------
     let updateData;
 
 
     let chart = function(selection) {
-
+        console.log(data);
         // Data check for presence of all the keys in each Object.
         data = _.map(data, d => { for (let key in keys) { key = keys[key]; if (!(key in d)) { d[key] = 0; } } return d; })
 
         const svg = selection.append('svg').attr('height', height).attr('width', width).attr('id', 'stack-chart').attr('class', 'stack');
+        // svg.style('font-family', 'Sans serif')
         let plotData = d3.stack().keys(keys)(data);
 
         let yMax = _.max(_.flattenDeep(plotData));
         let yMin = _.min(_.flattenDeep(plotData));
-        let xticks = _.map(data, o => { return parseInt(o['repLen']); }).sort();
+        let xticks = _.map(data, o => { return parseInt(o['x']); });
 
-        plotData = _.flatMap(plotData, function(d) { d = _.map(d, function(o) { o.key = d.key; return o; }); return d });
-        colors = colorPalette(keys.length, 700);
-        for (let c in colors) { color[keys[c]] = colors[c] }
+        plotData = _.flatMap(plotData, function(d) {
+            d = _.map(d, function(o) {
+                o.key = d.key;
+                o.view = 1;
+                return o;
+            });
+            return d
+        });
+        for (let c in color) { colorObj[keys[c]] = color[c] }
 
 
         let svgH = parseInt(svg.style('height').substr(0, svg.style('height').length - 2));
         let svgW = parseInt(svg.style('width').substr(0, svg.style('width').length - 2));
+
+        const legendLabelWidth = 80;
+        const labelsinLine = Math.floor((svgW - 40 - margin.left) / 70);
+        const legendLines = Math.ceil(data.length / labelsinLine);
+        const legendHeight = legendLines * 20;
+        margin.top += legendHeight;
 
         let plotH = svgH - margin.top - margin.bottom; // Calculating the actual width of the plot
         let plotW = svgW - margin.left - margin.right; // Calculating the actual height of the plot
@@ -105,8 +124,38 @@ const stackChart = function() {
 
         const draw = function() {
 
+            let currentPlotData = _.filter(plotData, o => { return o.view == 1; })
+
             svg.select('.stack.x.axis').call(xAxis);
             svg.select('.stack.y.axis').call(yAxis);
+
+            svg.selectAll('.axislabel').remove();
+
+            /* -- Adding X-axis label ----------------------------------------------- */
+            if (xLabel) {
+                axislabel({
+                    selector: '.stack.x.axis',
+                    orient: 'bottom',
+                    fontweight: 'regular',
+                    size: '1em',
+                    distance: labelDistance,
+                    text: xLabel,
+                    margin: margin
+                });
+            }
+
+            /* -- Adding Y-axis label ----------------------------------------------- */
+            if (yLabel) {
+                axislabel({
+                    selector: '.stack.y.axis',
+                    orient: 'left',
+                    fontweight: 'regular',
+                    size: '1em',
+                    distance: labelDistance,
+                    text: yLabel,
+                    margin: margin
+                });
+            }
 
             let barWidth;
             if (xScale.bandwidth() <= 100) {
@@ -115,14 +164,14 @@ const stackChart = function() {
 
             /* -- Plotting the BARS ------------------------------------------------- */
 
-            const stackFigure = plotCanvas.selectAll('rect').data(plotData);
+            const stackFigure = plotCanvas.selectAll('rect').data(currentPlotData);
 
             stackFigure.exit().transition().duration(100).remove();
 
-            stackFigure.attr('x', function(d) { return xScale(d.data.repLen) + xScale.bandwidth() / 2 - barWidth / 2; })
+            stackFigure.attr('x', function(d) { return xScale(d.data.x) + xScale.bandwidth() / 2 - barWidth / 2; })
                 .attr('height', 0)
                 .attr('y', function(d) { return yScale(yMin); })
-                .attr('fill', function(d) { return color[d.key] })
+                .attr('fill', function(d) { return colorObj[d.key] })
                 .transition().duration(transition)
                 .attr('y', function(d) { return yScale(d[1]); })
                 .attr('height', function(d) { return yScale(d[0]) - yScale(d[1]); })
@@ -131,13 +180,54 @@ const stackChart = function() {
             stackFigure.enter()
                 .append('rect')
                 .attr('class', 'stack-bar')
-                .attr('x', function(d) { return xScale(d.data.repLen) + xScale.bandwidth() / 2 - barWidth / 2; })
+                .attr('x', function(d) { return xScale(d.data.x) + xScale.bandwidth() / 2 - barWidth / 2; })
                 .attr('y', function(d) { return yScale(yMin); })
-                .attr('fill', function(d) { return color[d.key] })
+                .attr('fill', function(d) { return colorObj[d.key] })
                 .transition().duration(transition)
                 .attr('y', function(d) { return yScale(d[1]); })
                 .attr('width', xScale.bandwidth())
                 .attr('height', function(d) { return yScale(d[0]) - yScale(d[1]); })
+
+            addLegend();
+
+
+        }
+
+        const addLegend = function() {
+
+            /* -- Adding Legend ----------------------------------------------------- */
+            svg.selectAll('.legend').remove();
+            let legend = svg.append("g")
+                .attr('class', 'stack legend')
+                .attr('transform', "translate(40,20)");
+
+            let legendLabel = legend.selectAll('.stack.legendLabel')
+                .data(keys)
+                .enter().append("g")
+                .attr("class", "stack legendLabel");
+
+            legendLabel.append("circle")
+                .attr("cx", function(d, i) { return legendLabelWidth * (i % labelsinLine); })
+                .attr("cy", function(d, i) { return (Math.ceil((i + 1) / labelsinLine) - 1) * 20; })
+                .attr("r", '5px')
+                .attr("fill", function(d) { return colorObj[d]; })
+                .style("cursor", "pointer")
+                .on("click", function(d, i) {
+                    console.log(d);
+                    // data[i]['view'] = (data[i]['view'] == 0) ? 1 : 0;
+                    // const fill = (data[i]['view'] == 0) ? "white" : colorObj[d.name];
+                    // const stroke = (data[i]['view'] == 0) ? colorObj[d.name] : "none";
+                    // d3.select(this).attr("fill", fill).attr("stroke", stroke).attr("stroke-width", 2);
+                    // updateLineChart(data);
+                })
+                // .on("dbclick", function(d, i) { console.log("double clicked!"); });
+
+            legendLabel.append("text")
+                .attr("transform", function(d, i) { return `translate(${ legendLabelWidth * (i % labelsinLine) + 10 }, ${ (Math.ceil((i + 1) / labelsinLine) - 1) * 20 })` })
+                .attr("dy", "0.35em")
+                .style("font-size", "0.8em")
+                .text(function(d) { return d; });
+
 
         }
 
@@ -148,12 +238,19 @@ const stackChart = function() {
             plotData = d3.stack().keys(keys)(data);
             yMax = _.max(_.flattenDeep(plotData));
             yMin = _.min(_.flattenDeep(plotData));
-            xticks = _.map(data, o => { return parseInt(o['repLen']); }).sort();
+            xticks = _.map(data, o => { return parseInt(o['x']); }).sort();
 
             xScale.domain(xticks);
             yScale.domain([yMin, yMax]);
 
-            plotData = _.flatMap(plotData, function(d) { d = _.map(d, function(o) { o.key = d.key; return o; }); return d });
+            plotData = _.flatMap(plotData, function(d) {
+                d = _.map(d, function(o) {
+                    o.key = d.key;
+                    o.view = 1;
+                    return o;
+                });
+                return d
+            });
             draw();
 
         }
@@ -175,7 +272,7 @@ const stackChart = function() {
             draw();
         }
 
-        window.onresize = _.debounce(updateResize, 300)
+        if (windowResize) { window.onresize = _.debounce(updateResize, 300); }
 
         draw();
 
@@ -194,6 +291,55 @@ const stackChart = function() {
         keys = _;
         return chart;
     }
+
+    chart.width = function(_) {
+        if (!arguments.length) return width;
+        width = _;
+        return chart;
+    }
+
+    chart.height = function(_) {
+        if (!arguments.length) return height;
+        height = _;
+        return chart;
+    }
+
+    chart.color = function(_) {
+        if (!arguments.length) return color;
+        color = _;
+        return chart;
+    }
+
+    chart.margin = function(_) {
+        if (!arguments.length) return margin;
+        margin = _;
+        return chart;
+    }
+
+    chart.xLabel = function(_) {
+        if (!arguments.length) return xLabel;
+        xLabel = _;
+        return chart;
+    }
+
+    chart.yLabel = function(_) {
+        if (!arguments.length) return yLabel;
+        yLabel = _;
+        return chart;
+    }
+
+    chart.labelDistance = function(_) {
+        if (!arguments.length) return labelDistance;
+        labelDistance = _;
+        return chart;
+    }
+
+    chart.windowResize = function(_) {
+        if (!arguments.length) return windowResize;
+        windowResize = _;
+        return chart;
+    }
+
 
     return chart
 

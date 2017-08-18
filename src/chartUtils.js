@@ -320,8 +320,6 @@ const colorPalette = function(num, intensity) {
 
     };
 
-    console.log(Object.keys(color));
-
     let outputPalette = []
     let colorKeys = Object.keys(color);
 
@@ -432,38 +430,40 @@ const axislabel = function(Obj) {
     const translateString = axisNode.getAttribute('transform');
     const axisbox = axisNode.getBBox();
     const translate = getTranslateValue(translateString);
-    console.log(translate[1]);
+
+    let textAnchor = 'middle';
+
     // if (side === 'outside') {padding = distance;}
     // else if (side === 'inside') {padding = -distance;}
 
     if (axisOrient === 'left') {
         translateX = translate[0] - axisbox.width - distance;
-        translateY = translate[1] + axisbox.height / 2;
+        translateY = translate[1] + axisbox.height / 2 + axisbox.y;
         rotate = -90;
     } else if (axisOrient === 'right') {
         translateX = translate[0] + axisbox.width + distance;
-        translateY = translate[1] + axisbox.height / 2;
+        translateY = translate[1] + axisbox.height / 2 + axisbox.y;
         rotate = -90;
     } else if (axisOrient === 'top') {
-        translateX = translate[0] + axisbox.width / 2;
+        translateX = translate[0] + axisbox.width / 2 + axisbox.x;
         translateY = translate[1] - axisbox.height - distance;
         rotate = 0;
     } else if (axisOrient === 'bottom') {
-        translateX = translate[0] + axisbox.width / 2;
+        translateX = translate[0] + axisbox.width / 2 + axisbox.x;
         translateY = translate[1] + axisbox.height + distance;
         rotate = 0;
     }
 
-    const parentNode = axisNode.parentElement.id;
-    d3.select("#" + parentNode)
+    const parentNode = axisNode.parentElement;
+    d3.select(parentNode)
         .append('g')
         .attr('class', 'axislabel')
         .append('text')
         .attr('class', 'labelText')
-        .attr('transform', 'translate(' + translateX + ', ' + translateY + ') rotate(' + rotate + ')')
+        .attr('transform', `translate( ${translateX}, ${translateY}) rotate(${rotate})`)
         .style('font-size', size)
         .style('font-weight', fontweight)
-        .style('text-anchor', 'center')
+        .style('text-anchor', textAnchor)
         .text(text);
 }
 
