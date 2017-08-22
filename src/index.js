@@ -5,7 +5,6 @@ import { stackData, stackChart } from './stackChart.js'
 
 d3.tsv('../data/data.tsv', function(data) {
     let keys = _.uniq(_.map(data, d => { return d.repEnd; }));
-
     data = _.map(data, o => {
         o[o['repEnd']] = parseInt(o['freq']);
         o['x'] = o['repLen'];

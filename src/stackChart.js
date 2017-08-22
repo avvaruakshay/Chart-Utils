@@ -45,9 +45,15 @@ const stackChart = function() {
     let chart = function(selection) {
         // Data check for presence of all the keys in each Object.
         data = _.map(data, d => { for (let key in keys) { key = keys[key]; if (!(key in d)) { d[key] = 0; } } return d; })
-
+        data = _.map(data, d => {
+            d['y'] = {};
+            for (let key in keys) {
+                key = keys[key];
+                d['y'][key] = d[key];
+            }
+            return d;
+        })
         const svg = selection.append('svg').attr('height', height).attr('width', width).attr('id', 'stack-chart').attr('class', 'stack');
-        // svg.style('font-family', 'Sans serif')
         let plotData = d3.stack().keys(keys)(data);
 
         let yMax = _.max(_.flattenDeep(plotData));
@@ -120,11 +126,23 @@ const stackChart = function() {
         const plotCanvas = svg.append('g').attr('id', 'stack-plotCanvas');
 
         let transition = 1000;
-        let stackTooltip = tooltip().label(function(d) { return d.data.repLen; })
-            .prop(function(d) {
-                return `AGAT: ${d.data.AGAT}<br> ATAG: ${d.data.ATAG}<br> GATA: ${d.data.GATA}<br> TAGA: ${d.data.TAGA}`;
+        let stackTooltip = tooltip().header({
+                datum: 'Frequency',
             })
-            .iconColor(function(d) { return colorObj[d.key]; });
+            .props({
+                data: function(d) {
+                    let output = [];
+                    for (let k in d.data.y) { output.push({ name: k, value: d.data.y[k], color: colorObj[k] }) };
+                    return output;
+                },
+                icon: 'circle',
+            });
+        // .prop({
+        //     datum: function(d) { return `${d.key}: ${d.data[d.key]}<br>Repeat length: ${d.data.repLen}`; },
+        //     icon: 'circle',
+        //     iconColor: function(d) { return colorObj[d.key]; }
+        // })
+
 
         const draw = function() {
 

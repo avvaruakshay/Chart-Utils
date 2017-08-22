@@ -59,7 +59,7 @@
 /******/ 	
 /******/ 	
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "f16a8ac9e8cbe0bb448a"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "377c8ada10d42bba3bbe"; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentParents = []; // eslint-disable-line no-unused-vars
@@ -35214,9 +35214,15 @@ const stackChart = function () {
                 }
             }return d;
         });
-
+        data = _.map(data, d => {
+            d['y'] = {};
+            for (let key in keys) {
+                key = keys[key];
+                d['y'][key] = d[key];
+            }
+            return d;
+        });
         const svg = selection.append('svg').attr('height', height).attr('width', width).attr('id', 'stack-chart').attr('class', 'stack');
-        // svg.style('font-family', 'Sans serif')
         let plotData = d3.stack().keys(keys)(data);
 
         let yMax = _.max(_.flattenDeep(plotData));
@@ -35287,13 +35293,24 @@ const stackChart = function () {
         const plotCanvas = svg.append('g').attr('id', 'stack-plotCanvas');
 
         let transition = 1000;
-        let stackTooltip = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__tooltip_js__["a" /* tooltip */])().label(function (d) {
-            return d.data.repLen;
-        }).prop(function (d) {
-            return `AGAT: ${d.data.AGAT}<br> ATAG: ${d.data.ATAG}<br> GATA: ${d.data.GATA}<br> TAGA: ${d.data.TAGA}`;
-        }).iconColor(function (d) {
-            return colorObj[d.key];
+        let stackTooltip = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__tooltip_js__["a" /* tooltip */])().header({
+            datum: 'Frequency'
+        }).props({
+            data: function (d) {
+                let output = [];
+                for (let k in d.data.y) {
+                    output.push({ name: k, value: d.data.y[k], color: colorObj[k] });
+                };
+                return output;
+            },
+            icon: 'circle'
         });
+        // .prop({
+        //     datum: function(d) { return `${d.key}: ${d.data[d.key]}<br>Repeat length: ${d.data.repLen}`; },
+        //     icon: 'circle',
+        //     iconColor: function(d) { return colorObj[d.key]; }
+        // })
+
 
         const draw = function () {
 
@@ -35540,7 +35557,6 @@ d3.tsv('../data/data.tsv', function (data) {
     let keys = _.uniq(_.map(data, d => {
         return d.repEnd;
     }));
-
     data = _.map(data, o => {
         o[o['repEnd']] = parseInt(o['freq']);
         o['x'] = o['repLen'];
@@ -35814,43 +35830,115 @@ const d3 = __webpack_require__(0);
   A function that can be called on svg elements to assign a tooltip
   initialisation: create a div element just outside the svg and giv it a id  "tooltip"
   usage : element.call(tooltip)
-  define : (label, prop) 
+  define : (header, prop|props) 
  */
 const tooltip = function () {
 
-    // label = {icon: [null|circle|square|rounded-square], iconColor: [color|function], datum:[key|function]}
-    let label;
-    // prop = {icon: [null|circle|square|rounded-square], iconColor: [color|function], datum:[key|function]}
-    let prop;
-    let iconColor;
+    /* header = {
+       datum: (html|string|function),
+       icon: (null|circle|square|rounded-square), 
+       iconColor: (color|function)
+     } */
+    let header, headerDiv, headerIcon, headerDatum;
+
+    /* 
+      Basic data type of a property is (key, value) pair.
+      The function specified for "prop" should return a string which get embedded as html.
+      The function specified for "props" should return a list of Objects [{name: n, value: v, color: c}].
+      prop = {                                      | props = {
+      datum: (html|string|function),                |   data: (List of Objs(name, value)|Object|function),
+                                                    |   keys: (list),
+      icon: (null|circle|square|rounded-square),    |   icon: (null|circle|square|rounded-square|list|function),
+      iconColor: (color|function),                  |   iconColor: (color|function),
+    }                                               |}                                                          */
+    let prop, props, propDiv, propIcon, propDatum;
 
     let tipDiv = d3.select('#tooltip');
 
     let tip = function (selection) {
+
+        tipDiv.selectAll('*').remove();
+
+        if (header) {
+            headerDiv = tipDiv.append('div').attr('class', 'tip header');
+            if (header.icon) {
+                headerIcon = headerDiv.append('span').attr('class', `tip icon ${header.icon}`);
+            }
+            headerDatum = headerDiv.append('span').attr('class', 'tip headerDatum');
+            if (prop || props) {
+                tipDiv.append('hr').attr('class', 'tip divider').attr('size', 1);
+            }
+        }
+
+        if (prop) {
+            propDiv = tipDiv.append('div').attr('class', 'tip prop');
+            if (prop.icon) {
+                propIcon = propDiv.append('span').attr('class', `tip icon ${prop.icon}`);
+            }
+            propDatum = propDiv.append('span').attr('class', 'tip propDatum');
+        }
+
         selection.on('mouseover', function (d, i) {
-            console.log(d);
             let datum = d;
             let index = i;
             let x = event.clientX;
             let y = event.clientY;
 
-            let labelDiv = tipDiv.append('div').attr('class', 'tip label');
+            if (header) {
+                if (typeof header.datum === 'function') {
+                    headerDatum.html(header.datum(d));
+                } else if (typeof header.datum === 'string') {
+                    headerDatum.html(header.datum);
+                }
+                if (header.icon && header.iconColor) {
+                    if (typeof header.iconColor === 'function') {
+                        headerIcon.style('background-color', header.iconColor(d));
+                    } else if (typeof header.iconColor === 'string') {
+                        headerIcon.style('background-color', d[iconColor]);
+                    }
+                }
+            }
 
-            labelDiv.append('div').attr('class', 'tip icon').style('background-color', iconColor(d));
+            if (prop) {
+                if (typeof prop.datum === 'function') {
+                    propDatum.html(prop.datum(d));
+                } else if (typeof propDatum === 'string') {
+                    propDatum.html(prop.datum);
+                }
+                if (prop.icon && prop.iconColor) {
+                    if (typeof prop.iconColor === 'function') {
+                        propIcon.style('background-color', prop.iconColor(d));
+                    } else if (typeof prop.iconColor === 'string') {
+                        propIcon.style('background-color', d[iconColor]);
+                    }
+                }
+            } else if (props) {
+                let propsData = [];
+                if (typeof props.data === 'object') {
+                    for (let d in props.data) {
+                        propsData.push({ name: d, value: props.data[d] });
+                    }
+                } else if (props.data.constructor === Array) {
+                    propsData = props.data;
+                } else if (typeof props.data === 'function') {
+                    propsData = props.data(datum);
+                }
 
-            labelDiv.append('span').html(label(d));
-
-            tipDiv.append('hr').attr('class', 'tip divider').attr('size', 1);
-
-            tipDiv.append('span').attr('class', 'tip prop').html(prop(d));
-
-            tipDiv.style('display', 'inline').style('top', `${y - 20}px`).style('left', `${x + 20}px`);
+                propDiv = tipDiv.selectAll('.prop').data(propsData).enter().append('div').attr('class', 'tip prop');
+                if (props.icon) {
+                    propIcon = propDiv.append('span').attr('class', `tip icon ${props.icon}`).style('background-color', function (d) {
+                        return d.color;
+                    });
+                }
+                propDatum = propDiv.append('span').attr('class', 'tip propDatum').html(function (d) {
+                    return `${d.name}: ${d.value}`;
+                });
+            }
         }).on('mousemove', function () {
             let x = event.clientX;
             let y = event.clientY;
             tipDiv.style('display', 'inline').style('top', `${y - 20}px`).style('left', `${x + 20}px`);
         }).on('mouseout', function () {
-            tipDiv.selectAll('*').remove();
             tipDiv.style('display', 'none');
         });
     };
@@ -35861,15 +35949,15 @@ const tooltip = function () {
         return tip;
     };
 
-    tip.label = function (_) {
-        if (!arguments.length) return label;
-        label = _;
+    tip.header = function (_) {
+        if (!arguments.length) return header;
+        header = _;
         return tip;
     };
 
-    tip.iconColor = function (_) {
-        if (!arguments.length) return iconColor;
-        iconColor = _;
+    tip.props = function (_) {
+        if (!arguments.length) return props;
+        props = _;
         return tip;
     };
 
