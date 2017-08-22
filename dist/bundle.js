@@ -59,7 +59,7 @@
 /******/ 	
 /******/ 	
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "450575225f8b79db4a6f"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "f16a8ac9e8cbe0bb448a"; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentParents = []; // eslint-disable-line no-unused-vars
@@ -35168,7 +35168,6 @@ const zoombehavior = function (Obj) {};
 /* unused harmony export stackData */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__chartUtils_js__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__tooltip_js__ = __webpack_require__(8);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__tooltip_js___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1__tooltip_js__);
 
 
 const d3 = __webpack_require__(0);
@@ -35207,7 +35206,6 @@ const stackChart = function () {
     let updateData;
 
     let chart = function (selection) {
-        console.log(data);
         // Data check for presence of all the keys in each Object.
         data = _.map(data, d => {
             for (let key in keys) {
@@ -35289,6 +35287,13 @@ const stackChart = function () {
         const plotCanvas = svg.append('g').attr('id', 'stack-plotCanvas');
 
         let transition = 1000;
+        let stackTooltip = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__tooltip_js__["a" /* tooltip */])().label(function (d) {
+            return d.data.repLen;
+        }).prop(function (d) {
+            return `AGAT: ${d.data.AGAT}<br> ATAG: ${d.data.ATAG}<br> GATA: ${d.data.GATA}<br> TAGA: ${d.data.TAGA}`;
+        }).iconColor(function (d) {
+            return colorObj[d.key];
+        });
 
         const draw = function () {
 
@@ -35346,7 +35351,7 @@ const stackChart = function () {
                 return yScale(yMin);
             }).attr('fill', function (d) {
                 return colorObj[d.key];
-            }).transition().duration(transition).attr('y', function (d) {
+            }).call(stackTooltip).transition().duration(transition).attr('y', function (d) {
                 return yScale(d[1]);
             }).attr('height', function (d) {
                 return yScale(d[0]) - yScale(d[1]);
@@ -35358,7 +35363,7 @@ const stackChart = function () {
                 return yScale(yMin);
             }).attr('fill', function (d) {
                 return colorObj[d.key];
-            }).transition().duration(transition).attr('y', function (d) {
+            }).call(stackTooltip).transition().duration(transition).attr('y', function (d) {
                 return yScale(d[1]);
             }).attr('width', xScale.bandwidth()).attr('height', function (d) {
                 return yScale(d[0]) - yScale(d[1]);
@@ -35799,7 +35804,77 @@ module.exports = function(module) {
 
 /***/ }),
 /* 8 */
-/***/ (function(module, exports) {
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return tooltip; });
+const d3 = __webpack_require__(0);
+
+/*
+  A function that can be called on svg elements to assign a tooltip
+  initialisation: create a div element just outside the svg and giv it a id  "tooltip"
+  usage : element.call(tooltip)
+  define : (label, prop) 
+ */
+const tooltip = function () {
+
+    // label = {icon: [null|circle|square|rounded-square], iconColor: [color|function], datum:[key|function]}
+    let label;
+    // prop = {icon: [null|circle|square|rounded-square], iconColor: [color|function], datum:[key|function]}
+    let prop;
+    let iconColor;
+
+    let tipDiv = d3.select('#tooltip');
+
+    let tip = function (selection) {
+        selection.on('mouseover', function (d, i) {
+            console.log(d);
+            let datum = d;
+            let index = i;
+            let x = event.clientX;
+            let y = event.clientY;
+
+            let labelDiv = tipDiv.append('div').attr('class', 'tip label');
+
+            labelDiv.append('div').attr('class', 'tip icon').style('background-color', iconColor(d));
+
+            labelDiv.append('span').html(label(d));
+
+            tipDiv.append('hr').attr('class', 'tip divider').attr('size', 1);
+
+            tipDiv.append('span').attr('class', 'tip prop').html(prop(d));
+
+            tipDiv.style('display', 'inline').style('top', `${y - 20}px`).style('left', `${x + 20}px`);
+        }).on('mousemove', function () {
+            let x = event.clientX;
+            let y = event.clientY;
+            tipDiv.style('display', 'inline').style('top', `${y - 20}px`).style('left', `${x + 20}px`);
+        }).on('mouseout', function () {
+            tipDiv.selectAll('*').remove();
+            tipDiv.style('display', 'none');
+        });
+    };
+
+    tip.prop = function (_) {
+        if (!arguments.length) return prop;
+        prop = _;
+        return tip;
+    };
+
+    tip.label = function (_) {
+        if (!arguments.length) return label;
+        label = _;
+        return tip;
+    };
+
+    tip.iconColor = function (_) {
+        if (!arguments.length) return iconColor;
+        iconColor = _;
+        return tip;
+    };
+
+    return tip;
+};
 
 
 

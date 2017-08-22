@@ -43,7 +43,6 @@ const stackChart = function() {
 
 
     let chart = function(selection) {
-        console.log(data);
         // Data check for presence of all the keys in each Object.
         data = _.map(data, d => { for (let key in keys) { key = keys[key]; if (!(key in d)) { d[key] = 0; } } return d; })
 
@@ -121,6 +120,11 @@ const stackChart = function() {
         const plotCanvas = svg.append('g').attr('id', 'stack-plotCanvas');
 
         let transition = 1000;
+        let stackTooltip = tooltip().label(function(d) { return d.data.repLen; })
+            .prop(function(d) {
+                return `AGAT: ${d.data.AGAT}<br> ATAG: ${d.data.ATAG}<br> GATA: ${d.data.GATA}<br> TAGA: ${d.data.TAGA}`;
+            })
+            .iconColor(function(d) { return colorObj[d.key]; });
 
         const draw = function() {
 
@@ -172,10 +176,11 @@ const stackChart = function() {
                 .attr('height', 0)
                 .attr('y', function(d) { return yScale(yMin); })
                 .attr('fill', function(d) { return colorObj[d.key] })
+                .call(stackTooltip)
                 .transition().duration(transition)
                 .attr('y', function(d) { return yScale(d[1]); })
                 .attr('height', function(d) { return yScale(d[0]) - yScale(d[1]); })
-                .attr('width', xScale.bandwidth())
+                .attr('width', xScale.bandwidth());
 
             stackFigure.enter()
                 .append('rect')
@@ -183,6 +188,7 @@ const stackChart = function() {
                 .attr('x', function(d) { return xScale(d.data.x) + xScale.bandwidth() / 2 - barWidth / 2; })
                 .attr('y', function(d) { return yScale(yMin); })
                 .attr('fill', function(d) { return colorObj[d.key] })
+                .call(stackTooltip)
                 .transition().duration(transition)
                 .attr('y', function(d) { return yScale(d[1]); })
                 .attr('width', xScale.bandwidth())

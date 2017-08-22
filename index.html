@@ -4,6 +4,7 @@
 
 <head>
     <title>Demo</title>
+    <link href="https://fonts.googleapis.com/css?family=Encode+Sans+Condensed:500|Roboto+Condensed|Ubuntu" rel="stylesheet">
 </head>
 
 <body>
@@ -12,18 +13,64 @@
     </center>
 
     <center>
-        <div id="main"></div>
+        <div id="main">
+            <div id='tooltip'></div>
+        </div>
     </center>
 
     <script src="./dist/bundle.js"></script>
 
     <style>
+        body {
+            font-family: 'Ubuntu', sans-serif;
+        }
+        
         #main {
             /*height: 80vh;*/
             /*width: 90vw;*/
             border-radius: 10px;
             border: 1px#bebebe solid;
             padding: 20px;
+        }
+        
+        #tooltip {
+            text-align: left;
+            background-color: white;
+            padding: 0.4em;
+            border-radius: 0.25em;
+            border: 1px solid #aeaeae;
+            box-shadow: 0px 8px 6px -6px black;
+            color: black;
+            position: absolute;
+            display: none;
+        }
+        
+        #tooltip .label {
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        #tooltip .prop {
+            font-size: 12px;
+            position: relative;
+            top: 2px;
+        }
+        
+        #tooltip .divider {
+            background-color: #eeeeee;
+            position: relative;
+            top: 2px;
+            width: 100%;
+            margin: 0px;
+        }
+        
+        #tooltip .icon {
+            display: inline-block;
+            border-radius: 50%;
+            width: 10px;
+            height: 10px;
+            /* background-color: red; */
+            margin-right: 4px;
         }
     </style>
 
