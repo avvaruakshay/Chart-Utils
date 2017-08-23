@@ -9,6 +9,10 @@ const d3 = require('d3');
  */
 const tooltip = function() {
 
+    let tipstyle = 'default'; //(pointer|default)
+    let xOffset = 10;
+    let yOffset = 10;
+    let position;
     /* header = {
        datum: (html|string|function),
        icon: (null|circle|square|rounded-square), 
@@ -28,10 +32,11 @@ const tooltip = function() {
     }                                               |}                                                          */
     let prop, props, propDiv, propIcon, propDatum;
 
-    let tipDiv = d3.select('#tooltip');
+    let tipDiv = d3.select('.tooltip');
 
     let tip = function(selection) {
-
+        tipDiv.attr('class', `tooltip ${tipstyle}`)
+        console.log(tipDiv.attr('class'));
         tipDiv.selectAll('*').remove();
 
         if (header) {
@@ -80,8 +85,8 @@ const tooltip = function() {
                 let x = event.clientX;
                 let y = event.clientY;
                 tipDiv.style('display', 'inline')
-                    .style('top', `${y - 20}px`)
-                    .style('left', `${x + 20}px`);
+                    .style('left', `${x + xOffset}px`)
+                    .style('top', `${y + yOffset}px`);
             })
             .on('mouseout', function() {
                 tipDiv.style('display', 'none');
@@ -103,6 +108,24 @@ const tooltip = function() {
     tip.props = function(_) {
         if (!arguments.length) return props;
         props = _;
+        return tip;
+    }
+
+    tip.tipstyle = function(_) {
+        if (!arguments.length) return tipstyle;
+        tipstyle = _;
+        return tip;
+    }
+
+    tip.xOffset = function(_) {
+        if (!arguments.length) return xOffset;
+        xOffset = _;
+        return tip;
+    }
+
+    tip.yOffset = function(_) {
+        if (!arguments.length) return yOffset;
+        yOffset = _;
         return tip;
     }
 

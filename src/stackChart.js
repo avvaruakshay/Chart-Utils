@@ -126,7 +126,9 @@ const stackChart = function() {
         const plotCanvas = svg.append('g').attr('id', 'stack-plotCanvas');
 
         let transition = 1000;
-        let stackTooltip = tooltip().header({
+        let stackTooltip = tooltip()
+            // .tipstyle('pointer')
+            .header({
                 datum: 'Frequency',
             })
             .props({

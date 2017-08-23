@@ -14,7 +14,7 @@
 
     <center>
         <div id="main">
-            <div id='tooltip'></div>
+            <div class='tooltip'></div>
         </div>
     </center>
 
@@ -33,10 +33,47 @@
             padding: 20px;
         }
         
-        #tooltip {
+        .tooltip.pointer {
+            position: absolute;
+            padding: 12px;
+            margin: 1em 0 2em;
+            border: 1px solid #5a8f00;
+            color: #333;
+            background: #fff;
+            border-radius: 10px;
+            display: none;
+            text-align: left;
+            box-shadow: 5px 5px 6px -6px black;
+        }
+        
+        .tooltip.pointer:before {
+            content: "";
+            position: absolute;
+            bottom: -10px;
+            left: 40px;
+            border-width: 10px 10px 0;
+            border-style: solid;
+            border-color: #5a8f00 transparent;
+            display: block;
+            width: 0;
+        }
+        
+        .tooltip.pointer:after {
+            content: "";
+            position: absolute;
+            bottom: -9px;
+            left: 39px;
+            border-width: 10px 10px 0;
+            border-style: solid;
+            border-color: #fff transparent;
+            display: block;
+            width: 0;
+        }
+        
+        .tooltip.default {
             text-align: left;
             background-color: white;
-            padding: 0.4em;
+            padding: 12px;
             border-radius: 0.25em;
             border: 1px solid #aeaeae;
             box-shadow: 0px 8px 6px -6px black;
@@ -45,12 +82,12 @@
             display: none;
         }
         
-        #tooltip .header {
+        .tooltip .header {
             font-size: 12px;
             font-weight: bold;
         }
         
-        #tooltip .divider {
+        .tooltip .divider {
             background-color: #eeeeee;
             /* position: relative;
             top: 3px; */
@@ -59,12 +96,12 @@
             margin-bottom: 4px;
         }
         
-        #tooltip .prop {
+        .tooltip .prop {
             font-size: 12px;
             padding-bottom: 2px;
         }
         
-        #tooltip .icon {
+        .tooltip .icon {
             display: inline-block;
             border-radius: 50%;
             width: 10px;

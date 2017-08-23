@@ -59,7 +59,7 @@
 /******/ 	
 /******/ 	
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "377c8ada10d42bba3bbe"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "93b3be6966821f3e4895"; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentParents = []; // eslint-disable-line no-unused-vars
@@ -35293,7 +35293,9 @@ const stackChart = function () {
         const plotCanvas = svg.append('g').attr('id', 'stack-plotCanvas');
 
         let transition = 1000;
-        let stackTooltip = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__tooltip_js__["a" /* tooltip */])().header({
+        let stackTooltip = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__tooltip_js__["a" /* tooltip */])()
+        // .tipstyle('pointer')
+        .header({
             datum: 'Frequency'
         }).props({
             data: function (d) {
@@ -35834,6 +35836,10 @@ const d3 = __webpack_require__(0);
  */
 const tooltip = function () {
 
+    let tipstyle = 'default'; //(pointer|default)
+    let xOffset = 10;
+    let yOffset = 10;
+    let position;
     /* header = {
        datum: (html|string|function),
        icon: (null|circle|square|rounded-square), 
@@ -35853,10 +35859,11 @@ const tooltip = function () {
     }                                               |}                                                          */
     let prop, props, propDiv, propIcon, propDatum;
 
-    let tipDiv = d3.select('#tooltip');
+    let tipDiv = d3.select('.tooltip');
 
     let tip = function (selection) {
-
+        tipDiv.attr('class', `tooltip ${tipstyle}`);
+        console.log(tipDiv.attr('class'));
         tipDiv.selectAll('*').remove();
 
         if (header) {
@@ -35937,7 +35944,7 @@ const tooltip = function () {
         }).on('mousemove', function () {
             let x = event.clientX;
             let y = event.clientY;
-            tipDiv.style('display', 'inline').style('top', `${y - 20}px`).style('left', `${x + 20}px`);
+            tipDiv.style('display', 'inline').style('left', `${x + xOffset}px`).style('top', `${y + yOffset}px`);
         }).on('mouseout', function () {
             tipDiv.style('display', 'none');
         });
@@ -35958,6 +35965,24 @@ const tooltip = function () {
     tip.props = function (_) {
         if (!arguments.length) return props;
         props = _;
+        return tip;
+    };
+
+    tip.tipstyle = function (_) {
+        if (!arguments.length) return tipstyle;
+        tipstyle = _;
+        return tip;
+    };
+
+    tip.xOffset = function (_) {
+        if (!arguments.length) return xOffset;
+        xOffset = _;
+        return tip;
+    };
+
+    tip.yOffset = function (_) {
+        if (!arguments.length) return yOffset;
+        yOffset = _;
         return tip;
     };
 
