@@ -3,8 +3,7 @@
 
 
 const d3 = require('d3')
-import { scale, axis, axislabel, rotateXticks } from "./chartUtils.js"
-import { colorPalette } from "./chartUtils.js"
+import { scale, axis, axislabel, rotateXticks, colorPalette } from "./chartUtils.js"
 import { tooltip } from "./tooltip.js"
 
 
@@ -22,9 +21,10 @@ const stackData = function() {
 
 const stackChart = function() {
 
-    // Customizable options declared outside the chart function
+    // Customizable chart properties
     let data = [];
     let keys;
+    let x = 'x';
     let width = '80vw';
     let height = '80vh';
     let margin = { top: 20, right: 20, bottom: 40, left: 40 };
@@ -54,12 +54,13 @@ const stackChart = function() {
             return d;
         })
         const svg = selection.append('svg').attr('height', height).attr('width', width).attr('id', 'stack-chart').attr('class', 'stack');
-        let plotData = d3.stack().keys(keys)(data);
+        let svgH = parseInt(svg.style('height').substr(0, svg.style('height').length - 2));
+        let svgW = parseInt(svg.style('width').substr(0, svg.style('width').length - 2));
 
+        let plotData = d3.stack().keys(keys)(data);
         let yMax = _.max(_.flattenDeep(plotData));
         let yMin = _.min(_.flattenDeep(plotData));
-        let xticks = _.map(data, o => { return parseInt(o['x']); });
-
+        let xticks = _.map(data, o => { return parseInt(o[x]); });
         plotData = _.flatMap(plotData, function(d) {
             d = _.map(d, function(o) {
                 o.key = d.key;
@@ -68,11 +69,7 @@ const stackChart = function() {
             });
             return d
         });
-        for (let c in color) { colorObj[keys[c]] = color[c] }
-
-
-        let svgH = parseInt(svg.style('height').substr(0, svg.style('height').length - 2));
-        let svgW = parseInt(svg.style('width').substr(0, svg.style('width').length - 2));
+        _.forEach(keys, function(o, i) { colorObj[o] = color[i]; });
 
         const legendLabelWidth = 80;
         const labelsinLine = Math.floor((svgW - 40 - margin.left) / 70);
@@ -94,7 +91,7 @@ const stackChart = function() {
             align: 0
         });
 
-        /* -- Defining and Callling X-axis -------------------------------------- */
+        /* -- Defining X-axis -------------------------------------- */
         let xAxis = axis({
             scale: xScale,
             orient: 'bottom'
@@ -102,17 +99,17 @@ const stackChart = function() {
 
         let xAxisElement = svg.append('g')
             .attr('class', 'stack x axis')
-            .attr('transform', 'translate(0,' + (plotStarty + plotH) + ')');
+            .attr('transform', `translate(0, ${plotStarty + plotH})`);
 
 
-        /* -- Defining scale for Y-axis ----------------------------------------- */
+        /* -- Defining the scale for Y-axis ----------------------------------------- */
         let yScale = scale({
             domain: [yMin, yMax],
             range: [plotH + plotStarty, plotStarty],
             scaleType: 'linear',
         });
 
-        /* -- Defining and Calling Y-axis --------------------------------------- */
+        /* -- Defining Y-axis --------------------------------------- */
         let yAxis = axis({
             scale: yScale,
             ticks: 4,
@@ -121,11 +118,11 @@ const stackChart = function() {
 
         let yAxisElement = svg.append('g')
             .attr('class', 'stack y axis')
-            .attr('transform', 'translate(' + margin.left + ', 0)');
+            .attr('transform', `translate( ${margin.left} , 0)`);
 
+        let duration = 1000;
         const plotCanvas = svg.append('g').attr('id', 'stack-plotCanvas');
 
-        let transition = 1000;
         let stackTooltip = tooltip()
             // .tipstyle('pointer')
             .header({
@@ -197,7 +194,7 @@ const stackChart = function() {
                 .attr('y', function(d) { return yScale(yMin); })
                 .attr('fill', function(d) { return colorObj[d.key] })
                 .call(stackTooltip)
-                .transition().duration(transition)
+                .transition().duration(duration)
                 .attr('y', function(d) { return yScale(d[1]); })
                 .attr('height', function(d) { return yScale(d[0]) - yScale(d[1]); })
                 .attr('width', xScale.bandwidth());
@@ -209,7 +206,7 @@ const stackChart = function() {
                 .attr('y', function(d) { return yScale(yMin); })
                 .attr('fill', function(d) { return colorObj[d.key] })
                 .call(stackTooltip)
-                .transition().duration(transition)
+                .transition().duration(duration)
                 .attr('y', function(d) { return yScale(d[1]); })
                 .attr('width', xScale.bandwidth())
                 .attr('height', function(d) { return yScale(d[0]) - yScale(d[1]); })
@@ -258,13 +255,13 @@ const stackChart = function() {
         }
 
         updateData = function() {
-            transition = 1000;
+            duration = 1000;
             // Data check for presence of all the keys in each Object.
             data = _.map(data, d => { for (let key in keys) { key = keys[key]; if (!(key in d)) { d[key] = 0; } } return d; })
             plotData = d3.stack().keys(keys)(data);
             yMax = _.max(_.flattenDeep(plotData));
             yMin = _.min(_.flattenDeep(plotData));
-            xticks = _.map(data, o => { return parseInt(o['x']); }).sort();
+            xticks = _.map(data, o => { return parseInt(o[x]); }).sort();
 
             xScale.domain(xticks);
             yScale.domain([yMin, yMax]);
@@ -282,7 +279,7 @@ const stackChart = function() {
         }
 
         const updateResize = function() {
-            transition = 0;
+            duration = 0;
             svgH = parseInt(svg.style('height').substr(0, svg.style('height').length - 2));
             svgW = parseInt(svg.style('width').substr(0, svg.style('width').length - 2));
 
@@ -315,6 +312,12 @@ const stackChart = function() {
     chart.keys = function(_) {
         if (!arguments.length) return keys;
         keys = _;
+        return chart;
+    }
+
+    chart.x = function(_) {
+        if (!arguments.length) return x;
+        x = _;
         return chart;
     }
 
