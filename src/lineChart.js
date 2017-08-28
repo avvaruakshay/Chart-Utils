@@ -27,8 +27,8 @@ const multilineChart = function() {
     let height = '80vh';
     let margin = { top: 20, right: 20, bottom: 40, left: 40 };
 
-    let xLabel;
-    let yLabel;
+    let xLabel = 'X-axis';
+    let yLabel = 'Y-axis';
     let color = colorPalette(19, 700);
     let colorObj = {};
     let labelDistance = 20;
@@ -282,7 +282,6 @@ const multilineChart = function() {
             multilineFocus();
         }
 
-
         const addLegend = function() {
             svg.selectAll('.legend').remove();
             let legend = svg.append("g")
@@ -332,20 +331,61 @@ const multilineChart = function() {
         }
 
         const updateResize = function() {
+            duration = 0;
+            svgH = parseInt(svg.style('height').substr(0, svg.style('height').length - 2));
+            svgW = parseInt(svg.style('width').substr(0, svg.style('width').length - 2));
 
+            plotH = svgH - margin.top - margin.bottom; // Calculating the actual width of the plot
+            plotW = svgW - margin.left - margin.right; // Calculating the actual height of the plot
+
+            xScale.range([plotStartx, plotStartx + plotW]);
+            yScale.range([plotH + plotStarty, plotStarty]);
+
+            yAxisElement.attr('transform', 'translate(' + margin.left + ', 0)');
+            xAxisElement.attr('transform', 'translate(0,' + (plotStarty + plotH) + ')');
+
+            draw();
         }
 
         if (windowResize) { window.onresize = _.debounce(updateResize, 300); }
 
         draw();
-
-
     }
 
     chart.data = function(_) {
         if (!arguments.length) return data;
         data = _;
         if (typeof updateData === 'function') updateData();
+        return chart;
+    }
+
+    chart.height = function(_) {
+        if (!arguments.length) return height;
+        height = _;
+        return chart;
+    }
+
+    chart.width = function(_) {
+        if (!arguments.length) return width;
+        width = _;
+        return chart;
+    }
+
+    chart.x = function(_) {
+        if (!arguments.length) return x;
+        x = _;
+        return chart;
+    }
+
+    chart.y = function(_) {
+        if (!arguments.length) return y;
+        y = _;
+        return chart;
+    }
+
+    chart.margin = function(_) {
+        if (!arguments.length) return margin;
+        margin = _;
         return chart;
     }
 

@@ -37,10 +37,8 @@ const stackChart = function() {
     let labelDistance = 20;
     let windowResize = true;
 
-
     // Functions to update the Chart --------------------------------------------------------------
     let updateData;
-
 
     let chart = function(selection) {
         // Data check for presence of all the keys in each Object.
@@ -267,15 +265,15 @@ const stackChart = function() {
             yScale.domain([yMin, yMax]);
 
             plotData = _.flatMap(plotData, function(d) {
-                d = _.map(d, function(o) {
+                d = _.map(d, o => {
                     o.key = d.key;
                     o.view = 1;
                     return o;
                 });
-                return d
+                return d;
             });
-            draw();
 
+            draw();
         }
 
         const updateResize = function() {
@@ -300,7 +298,6 @@ const stackChart = function() {
         draw();
 
     }
-
 
     chart.data = function(_) {
         if (!arguments.length) return data;
