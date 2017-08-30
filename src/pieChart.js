@@ -58,55 +58,61 @@ const pieChart = function() {
         const plotW = svgW - margin.left - margin.right - legendWidth; // Calculating the actual height of the plot
         const plotStartx = margin.left; // X-coordinate of the start of the plot
         const plotStarty = margin.top; // Y-coordinate of the start of the plot
-
-        radius = _.min([plotH, plotW]) / 2;
+        radius = Math.min(plotH, plotW) / 2;
 
         const colorObj = {};
         _.forEach(data, function(o, i) { colorObj[o.name] = color[i]; });
-        let pie = d3.pie().sort(null).padAngle(0.02).value(function(d) { return d.value; });
-        let plotData = pie(data);
-        console.log(plotData);
-        plotData = _.map(plotData, d => { d.view = 1; return d; });
 
-        const plotCanvas = svg.append('g').attr('id', 'pie-plotCanvas').attr('transform', `translate(${ plotStartx + (Math.min(plotW, plotH)/2) }, ${ plotStarty + (Math.min(plotW, plotH)/2) })`);
+        data = _.map(data, d => { d.view = 1; return d; })
+        let pie = d3.pie().sort(null).padAngle(0.02).value(function(d) { return d.value; });
+        let plotData;
+        let currentData;
+
+        const plotCanvas = svg.append('g').attr('id', 'pie-plotCanvas').attr('transform', `translate(${ plotStartx + (plotW)/2 }, ${ plotStarty + (plotH)/2 })`);
 
         const draw = function() {
-
-            let currentData = _.filter(plotData, function(d) { return d.view == 1; });
-
+            plotcurrentData();
             addLegend();
+        }
+
+        const plotcurrentData = function() {
+
+            currentData = _.filter(data, function(d) { return d.view == 1; });
+            let totalValue = _.sumBy(currentData, d => { return d.value });
+            currentData = _.map(currentData, d => { d.percentage = parseFloat(((d.value / totalValue) * 100).toFixed(2)); return d; });
+
+            plotData = pie(currentData);
 
             const path = d3.arc()
                 .outerRadius(radius - 10)
                 .innerRadius(2);
 
-            let plotArc = plotCanvas.selectAll(".arc").data(currentData);
-            let plotArcGroup = plotArc.enter().append("g")
-                .attr("class", "arc");
+            let pieTooltip = tooltip().header({ datum: 'Frequency' }).prop({
+                datum: function(d) { return `${d.data.name}: ${d.data.percentage}%`; }
+            });
+
+            let plotArc = plotCanvas.selectAll(".arc").data(plotData);
+            let plotArcGroup = plotArc.enter().append("g").attr("class", "arc");
 
             plotArcGroup.append("path")
                 .attr("fill", function(d, i) { return colorObj[d.data.name] })
+                .call(pieTooltip)
                 .transition()
                 .delay(250)
                 .duration(250)
                 .attrTween('d', function(d) {
                     const i = d3.interpolate(d.startAngle + 0, d.endAngle);
-                    return function(t) {
-                        d.endAngle = i(t);
-                        return path(d);
-                    }
+                    return function(t) { d.endAngle = i(t); return path(d); }
                 });
 
             plotArc.select("path")
+                .call(pieTooltip)
                 .transition()
                 .delay(250)
                 .duration(250)
                 .attrTween('d', function(d) {
                     const i = d3.interpolate(d.startAngle + 0, d.endAngle);
-                    return function(t) {
-                        d.endAngle = i(t);
-                        return path(d);
-                    }
+                    return function(t) { d.endAngle = i(t); return path(d); }
                 })
                 .attr("fill", function(d, i) { return colorObj[d.data.name] });
 
@@ -114,22 +120,14 @@ const pieChart = function() {
 
         }
 
-        const updateData = function() {
-            duration = 1000;
-            plotData = d3.pie().keys(keys)(data);
-            plotData = _.map(plotData, d => { d.view = 1; return d; });
-            addLegend();
-            draw();
-        }
-
         const addLegend = function() {
             /* -- Adding Legend ----------------------------------------------------- */
             let legend = svg.append("g")
                 .attr('class', 'pie legend')
-                .attr('transform', `translate(${ plotStartx + Math.min(plotH, plotW) + 20}, ${ plotStarty + 40 })`);
+                .attr('transform', `translate(${ plotStartx + (plotW)/2 + radius + 20}, ${ plotStarty + 40 })`);
 
             let legendLabel = legend.selectAll('.pie.legendLabel')
-                .data(data)
+                .data(plotData)
                 .enter().append("g")
                 .attr("class", "pie legendLabel");
 
@@ -138,20 +136,20 @@ const pieChart = function() {
                 .attr("cy", function(d, i) { return i * 20; })
                 .attr("r", '5px')
                 .style("cursor", "pointer")
-                .attr("fill", function(d) { return colorObj[d.name]; })
+                .attr("fill", function(d) { return colorObj[d.data.name]; })
                 .on("click", function(d, i) {
                     data[i]['view'] = (data[i]['view'] == 0) ? 1 : 0;
-                    const fill = (data[i]['view'] == 0) ? "white" : colorObj[d.name];
-                    const stroke = (data[i]['view'] == 0) ? colorObj[d.name] : "none";
+                    const fill = (data[i]['view'] == 0) ? "white" : colorObj[d.data.name];
+                    const stroke = (data[i]['view'] == 0) ? colorObj[d.data.name] : "none";
                     d3.select(this).attr("fill", fill).attr("stroke", stroke).attr("stroke-width", 2);
-                    updatePieChart(data);
+                    plotcurrentData();
                 });
 
             legendLabel.append("text")
                 .attr("transform", function(d, i) { return `translate(10, ${i * 20})` })
                 .attr("dy", "0.35em")
                 .style("font-size", "0.8em")
-                .text(function(d) { return d.name; });
+                .text(function(d) { return d.data.name; });
 
         }
 
@@ -161,7 +159,6 @@ const pieChart = function() {
     chart.data = function(_) {
         if (!arguments.length) return data;
         data = _;
-        if (typeof updateData === 'function') updateData();
         return chart;
     }
 

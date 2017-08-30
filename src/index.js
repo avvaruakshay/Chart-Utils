@@ -8,7 +8,7 @@ import { pieDatum, pieChart } from './pieChart.js'
 d3.tsv('../data/data.tsv', function(data) {
 
     /* Trial pie chart */
-    data = _.map(Object.keys(_.countBy(data, 'repEnd')), o => { return { name: o, value: 39, percentage: 25 } });
+    data = _.map(Object.keys(_.countBy(data, 'repEnd')), o => { return { name: o, value: 39 } });
 
     const chartRoot = d3.select('#main');
     const newPieChart = pieChart().data(data);
