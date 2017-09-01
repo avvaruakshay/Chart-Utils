@@ -59,7 +59,7 @@
 /******/ 	
 /******/ 	
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "03f226209ffc3585b410"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "364c7db1f79943327e81"; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentParents = []; // eslint-disable-line no-unused-vars
@@ -35969,10 +35969,12 @@ const pieChart = function () {
     let data = [];
     let height = '80vh';
     let width = '80vw';
+    let piePosition = 'center'; //['left', 'right', 'center']
     let color = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["a" /* colorPalette */])(19, 700);
 
     let colorObj = {};
     let windowResize = true;
+    let pieRadius;
     let radius;
 
     let updateData;
@@ -35984,13 +35986,13 @@ const pieChart = function () {
     const chart = function (selection) {
 
         const svg = selection.append('svg').attr('height', height).attr('width', width).attr('id', 'pie-chart').attr('class', 'pie');
-        const svgH = parseInt(svg.style('height').substr(0, svg.style('height').length - 2));
-        const svgW = parseInt(svg.style('width').substr(0, svg.style('width').length - 2));
-        const plotH = svgH - margin.top - margin.bottom; // Calculating the actual width of the plot
-        const plotW = svgW - margin.left - margin.right - legendWidth; // Calculating the actual height of the plot
-        const plotStartx = margin.left; // X-coordinate of the start of the plot
-        const plotStarty = margin.top; // Y-coordinate of the start of the plot
-        radius = Math.min(plotH, plotW) / 2;
+        let svgH = parseInt(svg.style('height').substr(0, svg.style('height').length - 2));
+        let svgW = parseInt(svg.style('width').substr(0, svg.style('width').length - 2));
+        let plotH = svgH - margin.top - margin.bottom; // Calculating the actual width of the plot
+        let plotW = svgW - margin.left - margin.right - legendWidth; // Calculating the actual height of the plot
+        let plotStartx = margin.left; // X-coordinate of the start of the plot
+        let plotStarty = margin.top; // Y-coordinate of the start of the plot
+        radius = pieRadius ? pieRadius : Math.min(plotH, plotW) / 2;
 
         const colorObj = {};
         _.forEach(data, function (o, i) {
@@ -36006,7 +36008,10 @@ const pieChart = function () {
         let plotData;
         let currentData;
 
-        const plotCanvas = svg.append('g').attr('id', 'pie-plotCanvas').attr('transform', `translate(${plotStartx + plotW / 2}, ${plotStarty + plotH / 2})`);
+        const plotCenterXobj = { center: plotStartx + plotW / 2, left: plotStartx + radius, right: plotStartx + plotW - radius };
+        let plotCenterX = plotCenterXobj[piePosition];
+        let plotCenterY = plotStarty + plotH / 2;
+        let plotCanvas = svg.append('g').attr('id', 'pie-plotCanvas').attr('transform', `translate(${plotCenterX}, ${plotCenterY})`);
 
         const draw = function () {
             plotcurrentData();
@@ -36029,25 +36034,35 @@ const pieChart = function () {
 
             const path = d3.arc().outerRadius(radius - 10).innerRadius(2);
 
-            let pieTooltip = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__tooltip_js__["a" /* tooltip */])().header({ datum: 'Frequency' }).prop({
+            let pieTooltip = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__tooltip_js__["a" /* tooltip */])().header({ datum: function (d) {
+                    return d.data.name;
+                } }).prop({
                 datum: function (d) {
-                    return `${d.data.name}: ${d.data.percentage}%`;
+                    return `<div style="margin-bottom: 3px">Frequency: ${d.data.value}</div> <div> Percentage: ${d.data.percentage}%</div>`;
                 }
             });
 
             let plotArc = plotCanvas.selectAll(".arc").data(plotData);
             let plotArcGroup = plotArc.enter().append("g").attr("class", "arc");
 
+            plotArc.exit().remove();
+
             plotArcGroup.append("path").attr("fill", function (d, i) {
                 return colorObj[d.data.name];
-            }).call(pieTooltip).transition().delay(250).duration(250).attrTween('d', function (d) {
+            }).call(pieTooltip).transition().duration(250).attrTween('d', function (d) {
                 const i = d3.interpolate(d.startAngle + 0, d.endAngle);
                 return function (t) {
                     d.endAngle = i(t);return path(d);
                 };
             });
 
-            plotArc.select("path").call(pieTooltip).transition().delay(250).duration(250).attrTween('d', function (d) {
+            plotArcGroup.append("text").attr("transform", function (d) {
+                return "translate(" + path.centroid(d) + ")";
+            }).attr("dy", "0.35em").style("font-size", "0.7em").style("text-anchor", "center").text(function (d) {
+                return d.data.percentage + "%";
+            });
+
+            plotArc.select("path").call(pieTooltip).transition().duration(250).attrTween('d', function (d) {
                 const i = d3.interpolate(d.startAngle + 0, d.endAngle);
                 return function (t) {
                     d.endAngle = i(t);return path(d);
@@ -36056,11 +36071,18 @@ const pieChart = function () {
                 return colorObj[d.data.name];
             });
 
-            plotArc.exit().transition().duration(200).remove();
+            plotArc.select("text").transition().delay(250).duration(250).attr("transform", function (d) {
+                console.log(d);return "translate(" + path.centroid(d) + ")";
+            }).attr("dy", "0.35em").style("font-size", "0.7em").style("text-anchor", "center").text(function (d) {
+                return d.data.percentage + "%";
+            });
         };
 
         const addLegend = function () {
+
             /* -- Adding Legend ----------------------------------------------------- */
+            svg.select('.pie.legend').remove();
+
             let legend = svg.append("g").attr('class', 'pie legend').attr('transform', `translate(${plotStartx + plotW / 2 + radius + 20}, ${plotStarty + 40})`);
 
             let legendLabel = legend.selectAll('.pie.legendLabel').data(plotData).enter().append("g").attr("class", "pie legendLabel");
@@ -36084,6 +36106,23 @@ const pieChart = function () {
             });
         };
 
+        const updateResize = function () {
+            svgH = parseInt(svg.style('height').substr(0, svg.style('height').length - 2));
+            svgW = parseInt(svg.style('width').substr(0, svg.style('width').length - 2));
+            plotH = svgH - margin.top - margin.bottom; // Calculating the actual width of the plot
+            plotW = svgW - margin.left - margin.right; // Calculating the actual height of the plot
+            plotCenterX = plotCenterXobj[piePosition];
+            plotCenterY = plotStarty + plotH / 2;
+            radius = pieRadius ? pieRadius : Math.min(plotH, plotW) / 2;
+            plotCanvas.attr('transform', `translate(${plotCenterX}, ${plotCenterY})`);
+
+            draw();
+        };
+
+        if (windowResize) {
+            window.onresize = _.debounce(updateResize, 300);
+        }
+
         draw();
     };
 
@@ -36093,14 +36132,25 @@ const pieChart = function () {
         return chart;
     };
 
-    return chart;
+    chart.radius = function (_) {
+        if (!arguments.length) return radius;
+        radius = _;
+        return chart;
+    };
 
-    // arc.append("text")
-    //     .attr("transform", function(d) { return "translate(" + path.centroid(d) + ")"; })
-    //     .attr("dy", "0.35em")
-    //     .style("font-size", "0.7em")
-    //     .style("text-anchor", "center")
-    //     .text(function(d) { return d.data.percentage + "%"; })
+    chart.piePosition = function (_) {
+        if (!arguments.length) return piePosition;
+        piePosition = _;
+        return chart;
+    };
+
+    chart.windowResize = function (_) {
+        if (!arguments.length) return windowResize;
+        windowResize = _;
+        return chart;
+    };
+
+    return chart;
 };
 
 
@@ -36518,7 +36568,7 @@ d3.tsv('../data/data.tsv', function (data) {
     });
 
     const chartRoot = d3.select('#main');
-    const newPieChart = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__pieChart_js__["a" /* pieChart */])().data(data);
+    const newPieChart = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__pieChart_js__["a" /* pieChart */])().data(data).piePosition('center');
 
     chartRoot.call(newPieChart);
 
