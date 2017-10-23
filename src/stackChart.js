@@ -115,7 +115,7 @@ const stackChart = function() {
         const plotCanvas = svg.append('g').attr('id', 'stack-plotCanvas');
 
         let stackTooltip = tooltip()
-            // .tipstyle('pointer')
+            .tipstyle('pointer')
             .header({
                 datum: 'Frequency',
             })
@@ -135,12 +135,10 @@ const stackChart = function() {
 
 
         const draw = function() {
-
             let currentPlotData = _.filter(plotData, o => { return o.view == 1; })
 
             svg.select('.stack.x.axis').call(xAxis);
             svg.select('.stack.y.axis').call(yAxis);
-
             svg.selectAll('.axislabel').remove();
 
             /* -- Adding X-axis label ----------------------------------------------- */
@@ -203,8 +201,6 @@ const stackChart = function() {
                 .attr('height', function(d) { return yScale(d[0]) - yScale(d[1]); })
 
             addLegend();
-
-
         }
 
         const addLegend = function() {

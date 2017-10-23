@@ -35,8 +35,7 @@ const tooltip = function() {
     let tipDiv = d3.select('.tooltip');
 
     let tip = function(selection) {
-        tipDiv.attr('class', `tooltip ${tipstyle}`)
-        console.log(tipDiv.attr('class'));
+        tipDiv.attr('class', `tooltip ${tipstyle}`);
         tipDiv.selectAll('*').remove();
 
         if (header) {

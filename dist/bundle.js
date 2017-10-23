@@ -59,7 +59,7 @@
 /******/ 	
 /******/ 	
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "1d0fb9400f1a1e32e773"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "d38343f6c09e0815b0a4"; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentParents = []; // eslint-disable-line no-unused-vars
@@ -35378,7 +35378,6 @@ const tooltip = function () {
 
     let tip = function (selection) {
         tipDiv.attr('class', `tooltip ${tipstyle}`);
-        console.log(tipDiv.attr('class'));
         tipDiv.selectAll('*').remove();
 
         if (header) {
@@ -35511,7 +35510,7 @@ const tooltip = function () {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* unused harmony export multilineChart */
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return multilineChart; });
 /* unused harmony export lineDatum */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__chartUtils_js__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_js__ = __webpack_require__(3);
@@ -35939,7 +35938,7 @@ const multilineChart = function () {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* unused harmony export pieChart */
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return pieChart; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__chartUtils_js__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_js__ = __webpack_require__(3);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__tooltip_js__ = __webpack_require__(4);
@@ -36394,9 +36393,7 @@ const stackChart = function () {
         let duration = 1000;
         const plotCanvas = svg.append('g').attr('id', 'stack-plotCanvas');
 
-        let stackTooltip = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__tooltip_js__["a" /* tooltip */])()
-        // .tipstyle('pointer')
-        .header({
+        let stackTooltip = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__tooltip_js__["a" /* tooltip */])().tipstyle('pointer').header({
             datum: 'Frequency'
         }).props({
             data: function (d) {
@@ -36416,14 +36413,12 @@ const stackChart = function () {
 
 
         const draw = function () {
-
             let currentPlotData = _.filter(plotData, o => {
                 return o.view == 1;
             });
 
             svg.select('.stack.x.axis').call(xAxis);
             svg.select('.stack.y.axis').call(yAxis);
-
             svg.selectAll('.axislabel').remove();
 
             /* -- Adding X-axis label ----------------------------------------------- */
@@ -36661,6 +36656,8 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lineChart_js__ = __webpack_require__(5);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__pieChart_js__ = __webpack_require__(6);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__scatterChart_js__ = __webpack_require__(11);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__barChart_js__ = __webpack_require__(12);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__barChart_js___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4__barChart_js__);
 const _ = __webpack_require__(1);
 const d3 = __webpack_require__(0);
 
@@ -36669,30 +36666,41 @@ const d3 = __webpack_require__(0);
 
 
 
-// d3.tsv('../data/BT.tsv', function(data) {
 
-//     let names = _.map(_.uniqBy(data, 'repClass'), o => { return o.repClass; });
-//     let units = (_.map(_.uniqBy(data, 'units'), o => { return parseInt(o.units); })).sort();
-//     // names = ['AC', 'AG', 'AT', 'AAG'];
-//     data = _.map(names, o => { let values = _.map(_.filter(data, { repClass: o }), p => { return { x: parseInt(p.units), y: parseInt(p.freq) } }); return { name: o, values: values } });
-//     data = _.map(data, o => {
-//             let values = o.values;
-//             values = _.filter(values, d => { return d.x <= 50 && d.x >= 8; });
-//             // console.log(values);
-//             o.values = values;
-//             return o;
-//         })
-//         // console.log(data);
-//     const lineRoot = d3.select('#line-main');
-//     const newLineChart = multilineChart().data(data).margin({ top: 20, right: 20, bottom: 40, left: 80 }).xLabel('Repeat Units').yLabel('Frequency');
-//     lineRoot.call(newLineChart);
+/* Trial stack bar chart */
+d3.tsv('../data/bar_data.tsv', function (data) {
+    const barchartRoot = d3.select('#bar-main');
+    const newBarChart = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__barChart_js__["barChart"])().data(data);
+});
 
-// })
+d3.tsv('../data/BT.tsv', function (data) {
+
+    let names = _.map(_.uniqBy(data, 'repClass'), o => {
+        return o.repClass;
+    });
+    let units = _.map(_.uniqBy(data, 'units'), o => {
+        return parseInt(o.units);
+    }).sort();
+    data = _.map(names, o => {
+        let values = _.map(_.filter(data, { repClass: o }), p => {
+            return { x: parseInt(p.units), y: parseInt(p.freq) };
+        });return { name: o, values: values };
+    });
+    data = _.map(data, o => {
+        let values = o.values;
+        values = _.filter(values, d => {
+            return d.x <= 50 && d.x >= 8;
+        });
+        o.values = values;
+        return o;
+    });
+    const lineRoot = d3.select('#line-main');
+    const newLineChart = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__lineChart_js__["a" /* multilineChart */])().data(data).margin({ top: 20, right: 20, bottom: 40, left: 80 }).xLabel('Repeat Units').yLabel('Frequency');
+    lineRoot.call(newLineChart);
+});
 
 /* Trial stack bar chart */
 d3.tsv('../data/data.tsv', function (data) {
-
-    console.log(data);
 
     let keys = _.uniq(_.map(data, d => {
         return d.repEnd;
@@ -36716,17 +36724,18 @@ d3.tsv('../data/data.tsv', function (data) {
         return obj;
     });
 
-    const chartRoot = d3.select('#stacked-main');
+    const stackchartRoot = d3.select('#stacked-main');
     const newStackedChart = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__stackChart_js__["a" /* stackChart */])().data(data).keys(keys).margin({ left: 60, top: 20, right: 20, bottom: 60 }).xLabel('Repeat Length').yLabel('Frequency').labelDistance(20);
 
-    chartRoot.call(newStackedChart);
+    stackchartRoot.call(newStackedChart);
 });
 
-// d3.tsv("../data/pie_data.tsv", function(data) {
-//     const pieRoot = d3.select('#pie-main');
-//     const newPieChart = pieChart().data(data).piePosition('center');
-//     pieRoot.call(newPieChart);
-// })
+/* Trial Pie chart */
+d3.tsv("../data/pie_data.tsv", function (data) {
+    const pieRoot = d3.select('#pie-main');
+    const newPieChart = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__pieChart_js__["a" /* pieChart */])().data(data).piePosition('center');
+    pieRoot.call(newPieChart);
+});
 
 /***/ }),
 /* 9 */
@@ -37055,6 +37064,12 @@ const scatterChart = function (Obj) {
 };
 
 
+
+/***/ }),
+/* 12 */
+/***/ (function(module, exports) {
+
+throw new Error("Module build failed: Duplicate declaration \"margin\"\n\n\u001b[0m \u001b[90m 23 | \u001b[39m    let xLabel\u001b[33m;\u001b[39m\n \u001b[90m 24 | \u001b[39m    let yLabel\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 25 | \u001b[39m    \u001b[36mconst\u001b[39m margin \u001b[33m=\u001b[39m { top\u001b[33m:\u001b[39m \u001b[35m40\u001b[39m\u001b[33m,\u001b[39m right\u001b[33m:\u001b[39m \u001b[35m20\u001b[39m\u001b[33m,\u001b[39m bottom\u001b[33m:\u001b[39m \u001b[35m40\u001b[39m\u001b[33m,\u001b[39m left\u001b[33m:\u001b[39m \u001b[35m40\u001b[39m }\u001b[33m;\u001b[39m\n \u001b[90m    | \u001b[39m          \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 26 | \u001b[39m\n \u001b[90m 27 | \u001b[39m    let chart \u001b[33m=\u001b[39m \u001b[36mfunction\u001b[39m(selection) {\n \u001b[90m 28 | \u001b[39m\u001b[0m\n");
 
 /***/ })
 /******/ ]);
