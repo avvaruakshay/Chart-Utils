@@ -1,11 +1,16 @@
 'use strict';
 
+const d3 = require('d3');
+const _ = require('lodash');
+import { scale, axis, axislabel, rotateXticks, colorPalette } from "./chartUtils.js"
+import { getUniqueElements, getMatchingColumn } from "./utils.js"
+
 
 /* -------------------  Convert data readable for the bar chart function  -----------------------*/
 const scatterDatum = function(data, xVector, yVector, level) {
-	let dataOut = [];
+    let dataOut = [];
 
-    for (let d in _.range(data.length)){
+    for (let d in _.range(data.length)) {
         d = data[d];
         let dataObj = {};
         dataObj.x = parseFloat(d[xVector]).toFixed(2);
@@ -20,154 +25,215 @@ const scatterDatum = function(data, xVector, yVector, level) {
         xLabel: tipNames[xVector],
         yLabel: tipNames[yVector],
         svgid: "graph-svg",
-        margin: { top: 20, right: 10, bottom: 50, left: 70},
+        margin: { top: 20, right: 10, bottom: 50, left: 70 },
     }
 
     return scatterObj;
 }
 
+/*-- 1. Data format
+     data type: list of objects
+     sub : Each object has a three (key, value pairs)
+        (i) The xValue  (x, value)
+        (ii) The yValue (y, value)
+        (iii) The name of the line (name, value) #optional
+        (iv)  Group value (group, value) #optional
+    --*/
 
-const scatterChart = function(Obj){
-
-    let svgId;
-    /*     Error handling for invalid SVGID
-    Checks if the id exists
-    And if yes Checks if it is attributed to SVG tag      */
-    if(!(Obj.hasOwnProperty("svgid") && document.getElementById(Obj.svgid).tagName === "svg") ) {
-    try {
-      const svgIdError = new UnImplementedError("SvgIdError", "Invalid SVG id given!");
-      throw svgIdError;
-    }
-    catch(svgIdError){
-      console.log(svgIdError.name, ":", svgIdError.message);
-    }
-    }
-    else{
-    svgId = Obj.svgid;
-    }
+const scatterChart = function(Obj) {
 
     /* Defining defaults for different plotting parameters. */
 
-    const data = Obj.data; // Data for the plot
-    const color = (Obj.color)? Obj.color : "Teal"; // Default color of the bar set to "Teal"
-    const svgH = (Obj.height)? Obj.height : document.getElementById(svgId).getBoundingClientRect().height; // Getting height of the svg
-    const svgW = (Obj.width)? Obj.width : document.getElementById(svgId).getBoundingClientRect().width; // Getting width of the svg
-    const margin = (Obj.margin) ? Obj.margin : {top: 40, right: 20, bottom: 40, left: 40}; // Margins for the plot
-    const rotateXtick = (Obj.rotateXtick)? Obj.rotateXtick : 0; // Rotating the X-ticks
-    const xLabel = (Obj.xLabel) ? Obj.xLabel : 'X-Axis'; // X-label value
-    const yLabel = (Obj.yLabel) ? Obj.yLabel : 'Y-Axis'; // Y-label value
-    const plotH = svgH - margin.top - margin.bottom; // Calculating the actual width of the plot
-    const plotW = svgW - margin.left - margin.right; // Calculating the actual height of the plot
-    const plotStartx = margin.left; // X-coordinate of the start of the plot
-    const plotStarty = margin.top; // Y-coordinate of the start of the plot
+    let data = [];
+    let margin = { top: 40, right: 20, bottom: 40, left: 40 };
 
+    let xLabel = 'X-axis';
+    let yLabel = 'Y-axis';
+    let color = colorPalette(19, 700);
+    let rotateXtick = (Obj.rotateXtick) ? Obj.rotateXtick : 0; // Rotating the X-ticks
 
-    const xMax = d3.max(getMatchingColumn(data, 'x').map(parseFloat)); // Max value of the x-axis
-    const yMax = d3.max(getMatchingColumn(data, 'y').map(parseFloat)); // Max value of the y-axis
-    const xMin = d3.min(getMatchingColumn(data, 'x').map(parseFloat)); // Min value of the x-axis
-    const yMin = d3.min(getMatchingColumn(data, 'y').map(parseFloat)); // Min value of the y-axis
+    let xMax, xMin, yMax, yMin;
 
-    /* ---------------  Svg node selection ------------------ */
-    const svg = d3.select("#"+svgId);
+    let chart = function(selection) {
 
-    /* -- Clearing previous elements inside the svg --------------------------- */
-    svg.selectAll('g').remove();
+        const svg = selection.append('svg').attr('height', height).attr('width', width).attr('id', 'multiline-chart').attr('class', 'multiline');
+        let svgH = parseInt(svg.style('height').substr(0, svg.style('height').length - 2));
+        let svgW = parseInt(svg.style('width').substr(0, svg.style('width').length - 2));
 
-    /* ---------------  Defining the scale for X-axis ------------------- */
-    const xScale = scale({
-        domain: [xMin, xMax],
-        range: [plotStartx, plotStartx+plotW],
-        scaleType: 'linear'
-    });
-    /* --------------  Defining X-axis  --------------------- */
-    const xAxis = axis({
-    scale: xScale,
-    orient: 'bottom'});
-    const xAxisElement = svg.append('g')
-                          .attr('class', 'x axis')
-                          .attr('transform', 'translate(0,' + (plotStarty + plotH) + ')')
-                          .call(xAxis);
+        data = _.map(data, d => { d.view = 1; return d; });
+        // _.forEach(data, function(o, i) { colorObj[o.name] = color[i]; });
 
-    /* ---------------  Defining scale Y-axis ------------------- */
-    const yScale = scale({
-        domain: [yMin, yMax],
-        range: [plotH + plotStarty, plotStarty],
-        scaleType: 'linear',
-    });
-    /* ---------------  Defining Y-axis ------------------- */
-    const yAxis = axis({
-    scale: yScale,
-    ticks: 6});
-    const yAxisElement = svg.append('g')
-                            .attr('class', 'y axis')
-                            .attr('transform', 'translate(' + margin.left + ', 0)')
-                            .transition()
-                            .duration(1000)
-                            .call(yAxis);
+        const plotH = svgH - margin.top - margin.bottom; // Calculating the actual width of the plot
+        const plotW = svgW - margin.left - margin.right; // Calculating the actual height of the plot
+        const plotStartx = margin.left; // X-coordinate of the start of the plot
+        const plotStarty = margin.top; // Y-coordinate of the start of the plot
 
-    /* --------------- Adding tooltip ------------------- */
+        xMax = _.max(_.map(data, o => { return parseFloat(o['x']) }));
+        yMax = _.max(_.map(data, o => { return parseFloat(o['y']) }));
+        xMin = _.min(_.map(data, o => { return parseFloat(o['x']) }));
+        yMin = _.min(_.map(data, o => { return parseFloat(o['y']) }));
 
-    const tip = d3.tip()
-                .attr('class', 'd3-tip')
-                .offset([0, 10])
-                .direction('e')
-                .html(function(d) {
-                    const head = "<center style='font-weight: bold; font-size: 12px ;color: red'>" + d.key + "</center>";
-                    const xattr = "<center style='font-size: 12px; margin-top: 4px'><b style='color: yellow'>" + xLabel +": </b>" + d.x + "</center>";
-                    const yattr = "<center style='font-size: 12px; margin-top: 4px'><b style='color: yellow'>" + yLabel + ": </b>" + d.y + "</center>";
-                    return  head + xattr + yattr;
+        /* ---------------  Defining X-axis ------------------- */
+        const xScale = scale({ domain: [xMin, xMax], range: [plotStartx, plotStartx + plotW], scaleType: 'linear' });
+        const xAxis = axis({ scale: xScale, orient: 'bottom' });
+        const xAxisElement = svg.append('g').attr('class', 'scatter x axis').attr('transform', `translate(0, ${plotStarty + plotH})`);
+
+        /* ---------------  Defining Y-axis ------------------- */
+        const yScale = scale({ domain: [yMin, yMax], range: [plotH + plotStarty, plotStarty], scaleType: 'linear', });
+        const yAxis = axis({ scale: yScale, ticks: 6, tickformat: 'thousands' });
+        const yAxisElement = svg.append('g').attr('class', 'scatter y axis').attr('transform', `translate( ${margin.left} , 0)`);
+
+        let duration = 1000;
+        const plotCanvas = svg.append('g').attr('id', 'scatter-plotCanvas');
+
+        const draw = function() {
+            svg.select('.multiline.x.axis').call(xAxis);
+            svg.select('.multiline.y.axis').call(yAxis);
+
+            svg.selectAll('.axislabel').remove();
+            /* -- Adding X-axis label ----------------------------------------------- */
+            if (xLabel) {
+                axislabel({
+                    selector: '.scatter.x.axis',
+                    orient: 'bottom',
+                    fontweight: 'regular',
+                    size: '1em',
+                    distance: labelDistance,
+                    text: xLabel,
+                    margin: margin
                 });
+            }
 
-    /* --------------- Plotting the bars ------------------- */
-    const plotCanvas = svg.append('g')
-                          .attr('id', 'plotCanvas');
-    plotCanvas.call(tip);
+            /* -- Adding Y-axis label ----------------------------------------------- */
+            if (yLabel) {
+                axislabel({
+                    selector: '.scatter.y.axis',
+                    orient: 'left',
+                    fontweight: 'regular',
+                    size: '1em',
+                    distance: labelDistance,
+                    text: yLabel,
+                    margin: margin
+                });
+            }
 
-    plotCanvas.selectAll('circle.scatter')
-              .data(data)
-              .enter()
-              .append('circle')
-              .attr('class', 'scatter')
-              .attr('cx', function(d) { return xScale(Math.random() * (xMax - xMin) + xMin)})
-              .attr('cy', function(d) { return yScale(Math.random() * (yMax - yMin) + yMin)})
-              .attr('r', 6)
-              .attr('fill', function(d) { return scatterPalette[d.colorKey];})
-              .on('mouseover', tip.show)
-              .on('mouseout', tip.hide)
-              .style('fill-opacity', 0.5)
-              .style('stroke', function(d) { return scatterPalette[d.colorKey];})
-              .style('stroke-width', 0.7)
-              .transition()
-              .duration(function(d,i){return i*(1500/data.length);})
-              .attr('cx', function(d) { return xScale(d.x)})
-              .attr('cy', function(d) { return yScale(d.y)});
+            plotCurrentData();
+        }
 
+        const plotCurrentData = function() {
 
-    /* ---------------  Adding X-axis label ------------------- */
-    axislabel({
-    selector: '.x.axis',
-    orient: 'bottom',
-    fontweight: 'bold',
-    size: 12,
-    distance: margin.bottom - 30,
-    text: xLabel,});
+            let currentData = _.filter(data, o => { return o.view == 1; });
 
-    /* ---------------  Adding Y-axis label ------------------- */
-    axislabel({
-    selector: '.y.axis',
-    orient: 'left',
-    fontweight: 'bold',
-    size: 12,
-    distance: 10,
-    text: yLabel,});
+            xMax = _.max(_.map(currentData, o => { return parseFloat(o['x']) }));
+            yMax = _.max(_.map(currentData, o => { return parseFloat(o['y']) }));
+            xMin = _.min(_.map(currentData, o => { return parseFloat(o['x']) }));
+            yMin = _.min(_.map(currentData, o => { return parseFloat(o['y']) }));
+            xScale.domain([xMin, xMax]);
+            yScale.domain([yMin, yMax]);
+            svg.select('.scatter.x.axis').call(xAxis);
+            svg.select('.scatter.y.axis').call(yAxis);
 
+            let scatterFigure = plotCanvas.selectAll(".scatter.dot").data(currentData);
 
-    /* -- Rotating labels X-label --------------------------------------------- */
-    rotateXticks({
-        axisSelector: '.x',
-        angle: rotateXtick
-    });
+            scatterFigure.exit().remove();
 
-    /* -- End of scatterChart() function -----------------------------------------*/
+            scatterFigure.enter()
+                .append("circle")
+                .attr("class", "scatter dot")
+                .attr("fill", color[0])
+                .attr("r", 6)
+                .attr("cx", function(d) { return xScale(d.x); })
+                .attr("cy", function(d) { return yScale(d.y); });
+
+            scatterFigure.transition().duration(750)
+                .attr("fill", color[0])
+                .attr("r", 6)
+                .attr("cx", function(d) { return xScale(d.x); })
+                .attr("cy", function(d) { return yScale(d.y); });
+        }
+
+        const updateData = function() {
+            xMax = _.max(_.map(data, o => { return parseFloat(o['x']) }));
+            yMax = _.max(_.map(data, o => { return parseFloat(o['y']) }));
+            xMin = _.min(_.map(data, o => { return parseFloat(o['x']) }));
+            yMin = _.min(_.map(data, o => { return parseFloat(o['y']) }));
+            xScale.domain([xMin, xMax]);
+            yScale.domain([yMin, yMax]);
+
+            data = _.map(data, d => { d.view = 1; return d; });
+            draw();
+        }
+
+        const updateResize = function() {
+            duration = 0;
+            svgH = parseInt(svg.style('height').substr(0, svg.style('height').length - 2));
+            svgW = parseInt(svg.style('width').substr(0, svg.style('width').length - 2));
+
+            plotH = svgH - margin.top - margin.bottom; // Calculating the actual width of the plot
+            plotW = svgW - margin.left - margin.right; // Calculating the actual height of the plot
+
+            xScale.range([plotStartx, plotStartx + plotW]);
+            yScale.range([plotH + plotStarty, plotStarty]);
+
+            yAxisElement.attr('transform', 'translate(' + margin.left + ', 0)');
+            xAxisElement.attr('transform', 'translate(0,' + (plotStarty + plotH) + ')');
+
+            draw();
+        }
+
+    }
+
+    chart.data = function(_) {
+        if (!arguments.length) return data;
+        data = _;
+        if (typeof updateData === 'function') updateData();
+        return chart;
+    }
+
+    chart.height = function(_) {
+        if (!arguments.length) return height;
+        height = _;
+        return chart;
+    }
+
+    chart.width = function(_) {
+        if (!arguments.length) return width;
+        width = _;
+        return chart;
+    }
+
+    chart.x = function(_) {
+        if (!arguments.length) return x;
+        x = _;
+        return chart;
+    }
+
+    chart.y = function(_) {
+        if (!arguments.length) return y;
+        y = _;
+        return chart;
+    }
+
+    chart.margin = function(_) {
+        if (!arguments.length) return margin;
+        margin = _;
+        return chart;
+    }
+
+    chart.xLabel = function(_) {
+        if (!arguments.length) return xLabel;
+        xLabel = _;
+        return chart;
+    }
+
+    chart.yLabel = function(_) {
+        if (!arguments.length) return yLabel;
+        yLabel = _;
+        return chart;
+    }
+
+    return chart;
 
 }
+
+export { scatterChart };

@@ -136,7 +136,7 @@ const multilineChart = function() {
                 .attr("class", "line graph")
                 .attr("fill", "none")
                 .attr("stroke", function(d) { return colorObj[d.name]; })
-                .attr("stroke-width", 1)
+                .attr("stroke-width", 3)
                 .attr("d", function(d) { return line(d['values']); });
 
             multilineFigure.transition().duration(750)
@@ -386,6 +386,18 @@ const multilineChart = function() {
     chart.margin = function(_) {
         if (!arguments.length) return margin;
         margin = _;
+        return chart;
+    }
+
+    chart.xLabel = function(_) {
+        if (!arguments.length) return xLabel;
+        xLabel = _;
+        return chart;
+    }
+
+    chart.yLabel = function(_) {
+        if (!arguments.length) return yLabel;
+        yLabel = _;
         return chart;
     }
 

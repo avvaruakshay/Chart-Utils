@@ -7,23 +7,6 @@ import { getUniqueElements } from "./utils.js"
 import { tooltip } from "./tooltip.js"
 
 
-const pieDatum = function(data) {
-    const kmerLables = { 1: 'Monomer', 2: 'Dimer', 3: 'Trimer', 4: 'Tetramer', 5: 'Pentamer', 6: 'Hexamer' };
-    let pieData = { 'Monomer': 0, 'Dimer': 0, 'Trimer': 0, 'Tetramer': 0, 'Pentamer': 0, 'Hexamer': 0 };
-    for (let d in data) {
-        d = data[d];
-        let kmer = kmerLables[d.name.length];
-        pieData[kmer] += parseInt(d.value);
-    }
-    const total = _.sum(Object.values(pieData));
-
-    pieData = _.map(Object.keys(pieData), function(d) {
-        return { name: d, value: pieData[d], percentage: Number(((pieData[d] * 100) / total).toFixed(2)), view: 1 }
-    });
-    return pieData;
-}
-
-
 /*-- 1. Data format
      data type: List of Objects
      Each object has atleast two keys:
@@ -83,7 +66,7 @@ const pieChart = function() {
         const plotcurrentData = function() {
 
             currentData = _.filter(data, function(d) { return d.view == 1; });
-            let totalValue = _.sumBy(currentData, d => { return d.value });
+            let totalValue = _.sumBy(currentData, d => { return parseFloat(d.value) });
             currentData = _.map(currentData, d => { d.percentage = parseFloat(((d.value / totalValue) * 100).toFixed(2)); return d; });
 
             plotData = pie(currentData);
@@ -111,12 +94,79 @@ const pieChart = function() {
                     return function(t) { d.endAngle = i(t); return path(d); }
                 });
 
-            plotArcGroup.append("text")
-                .attr("transform", function(d) { return "translate(" + path.centroid(d) + ")"; })
+            plotArcGroup.append('line').attr('class', 'labelLine1').transition()
+                .delay(250)
+                .duration(250)
+                .attr('x1', function(d) { return path.centroid(d)[0]; })
+                .attr('y1', function(d) { return path.centroid(d)[1]; })
+                .attr('x2', function(d) {
+                    let m = (path.centroid(d)[1] / path.centroid(d)[0]).toFixed(2);
+                    let mod = path.centroid(d)[0] / Math.abs(path.centroid(d)[0]);
+                    let x2 = (mod * ((radius + 10) / (Math.sqrt(1 + (m * m)))));
+                    return x2;
+                })
+                .attr('y2', function(d) {
+                    let m = (path.centroid(d)[1] / path.centroid(d)[0]).toFixed(2);
+                    let mod = path.centroid(d)[0] / Math.abs(path.centroid(d)[0]);
+                    let x2 = (mod * ((radius + 10) / (Math.sqrt(1 + (m * m)))));
+                    return m * x2;
+                })
+                .style('stroke', function(d, i) { return colorObj[d.data.name] });
+
+            plotArcGroup.append('line').attr('class', 'labelLine2').transition()
+                .delay(250)
+                .duration(250)
+                .attr('x1', function(d) {
+                    let m = (path.centroid(d)[1] / path.centroid(d)[0]).toFixed(2);
+                    let mod = path.centroid(d)[0] / Math.abs(path.centroid(d)[0]);
+                    let x1 = (mod * ((radius + 10) / (Math.sqrt(1 + (m * m)))));
+                    return x1;
+                })
+                .attr('y1', function(d) {
+                    let m = (path.centroid(d)[1] / path.centroid(d)[0]).toFixed(2);
+                    let mod = path.centroid(d)[0] / Math.abs(path.centroid(d)[0]);
+                    let x1 = (mod * ((radius + 10) / (Math.sqrt(1 + (m * m)))));
+                    return m * x1;
+                })
+                .attr('x2', function(d) {
+                    let m = (path.centroid(d)[1] / path.centroid(d)[0]).toFixed(2);
+                    let mod = path.centroid(d)[0] / Math.abs(path.centroid(d)[0]);
+                    let x1 = (mod * ((radius + 10) / (Math.sqrt(1 + (m * m)))));
+                    return x1 + (mod * 20);
+                })
+                .attr('y2', function(d) {
+                    let m = (path.centroid(d)[1] / path.centroid(d)[0]).toFixed(2);
+                    let mod = path.centroid(d)[0] / Math.abs(path.centroid(d)[0]);
+                    let x1 = (mod * ((radius + 10) / (Math.sqrt(1 + (m * m)))));
+                    return m * x1;
+                })
+                .style('stroke', function(d, i) { return colorObj[d.data.name] });
+
+            plotArcGroup.append('text').attr('class', 'labelText').transition()
                 .attr("dy", "0.35em")
                 .style("font-size", "0.7em")
-                .style("text-anchor", "center")
-                .text(function(d) { return d.data.percentage + "%"; });
+                .delay(250)
+                .duration(250)
+                .attr('transform', function(d) {
+                    let m = (path.centroid(d)[1] / path.centroid(d)[0]).toFixed(2);
+                    let mod = path.centroid(d)[0] / Math.abs(path.centroid(d)[0]);
+                    let x = (mod * ((radius + 10) / (Math.sqrt(1 + (m * m)))));
+                    return `translate(${ x + (mod * 25) }, ${ m * x })`;
+                })
+                .style('text-anchor', function(d) {
+                    let mod = path.centroid(d)[0] / Math.abs(path.centroid(d)[0]);
+                    let ta = (mod < 0) ? 'end' : 'start';
+                    return ta
+                })
+                .style('margin', '4px')
+                .text(function(d) { return `${d.data.percentage}%`; });
+
+            // plotArcGroup.append("text")
+            //     .attr("transform", function(d) { return `translate(${path.centroid(d)})`; })
+            //     .attr("dy", "0.35em")
+            //     .style("font-size", "0.7em")
+            //     .style("text-anchor", "center")
+            //     .text(function(d) { return `${d.data.name} ${d.data.percentage}%`; });
 
             plotArc.select("path")
                 .call(pieTooltip)
@@ -128,14 +178,81 @@ const pieChart = function() {
                 })
                 .attr("fill", function(d, i) { return colorObj[d.data.name] });
 
-            plotArc.select("text").transition()
+            plotArc.select('line.labelLine1').attr('class', 'labelLine1').transition()
                 .delay(250)
                 .duration(250)
-                .attr("transform", function(d) { console.log(d); return "translate(" + path.centroid(d) + ")"; })
+                .attr('x1', function(d) { return path.centroid(d)[0]; })
+                .attr('y1', function(d) { return path.centroid(d)[1]; })
+                .attr('x2', function(d) {
+                    let m = (path.centroid(d)[1] / path.centroid(d)[0]).toFixed(2);
+                    let mod = path.centroid(d)[0] / Math.abs(path.centroid(d)[0]);
+                    let x2 = (mod * ((radius + 10) / (Math.sqrt(1 + (m * m)))));
+                    return x2;
+                })
+                .attr('y2', function(d) {
+                    let m = (path.centroid(d)[1] / path.centroid(d)[0]).toFixed(2);
+                    let mod = path.centroid(d)[0] / Math.abs(path.centroid(d)[0]);
+                    let x2 = (mod * ((radius + 10) / (Math.sqrt(1 + (m * m)))));
+                    return m * x2;
+                })
+                .style('stroke', function(d, i) { return colorObj[d.data.name] });
+
+            plotArc.select('line.labelLine2').attr('class', 'labelLine2').transition()
+                .delay(250)
+                .duration(250)
+                .attr('x1', function(d) {
+                    let m = (path.centroid(d)[1] / path.centroid(d)[0]).toFixed(2);
+                    let mod = path.centroid(d)[0] / Math.abs(path.centroid(d)[0]);
+                    let x1 = (mod * ((radius + 10) / (Math.sqrt(1 + (m * m)))));
+                    return x1;
+                })
+                .attr('y1', function(d) {
+                    let m = (path.centroid(d)[1] / path.centroid(d)[0]).toFixed(2);
+                    let mod = path.centroid(d)[0] / Math.abs(path.centroid(d)[0]);
+                    let x1 = (mod * ((radius + 10) / (Math.sqrt(1 + (m * m)))));
+                    return m * x1;
+                })
+                .attr('x2', function(d) {
+                    let m = (path.centroid(d)[1] / path.centroid(d)[0]).toFixed(2);
+                    let mod = path.centroid(d)[0] / Math.abs(path.centroid(d)[0]);
+                    let x1 = (mod * ((radius + 10) / (Math.sqrt(1 + (m * m)))));
+                    return x1 + (mod * 20);
+                })
+                .attr('y2', function(d) {
+                    let m = (path.centroid(d)[1] / path.centroid(d)[0]).toFixed(2);
+                    let mod = path.centroid(d)[0] / Math.abs(path.centroid(d)[0]);
+                    let x1 = (mod * ((radius + 10) / (Math.sqrt(1 + (m * m)))));
+                    return m * x1;
+                })
+                .style('stroke', function(d, i) { return colorObj[d.data.name] });
+
+            plotArc.select('text.labelText').attr('class', 'labelText').transition()
                 .attr("dy", "0.35em")
                 .style("font-size", "0.7em")
-                .style("text-anchor", "center")
-                .text(function(d) { return d.data.percentage + "%"; });
+                .delay(250)
+                .duration(250)
+                .attr('transform', function(d) {
+                    let m = (path.centroid(d)[1] / path.centroid(d)[0]).toFixed(2);
+                    let mod = path.centroid(d)[0] / Math.abs(path.centroid(d)[0]);
+                    let x = (mod * ((radius + 10) / (Math.sqrt(1 + (m * m)))));
+                    return `translate(${ x + (mod * 25) }, ${ m * x })`;
+                })
+                .style('text-anchor', function(d) {
+                    let mod = path.centroid(d)[0] / Math.abs(path.centroid(d)[0]);
+                    let ta = (mod < 0) ? 'end' : 'start';
+                    return ta
+                })
+                .style('margin', '4px')
+                .text(function(d) { return `${d.data.percentage}%`; });
+
+            // plotArc.select("text").transition()
+            //     .delay(250)
+            //     .duration(250)
+            //     .attr("transform", function(d) { return "translate(" + path.centroid(d) + ")"; })
+            //     .attr("dy", "0.35em")
+            //     .style("font-size", "0.7em")
+            //     .style("text-anchor", "center")
+            //     .text(function(d) { return `${d.data.percentage}%`; });
 
         }
 
@@ -146,7 +263,7 @@ const pieChart = function() {
 
             let legend = svg.append("g")
                 .attr('class', 'pie legend')
-                .attr('transform', `translate(${ plotStartx + (plotW)/2 + radius + 20}, ${ plotStarty + 40 })`);
+                .attr('transform', `translate(${ plotStartx + (plotW)/2 + radius + 60}, ${ plotStarty + 40 })`);
 
             let legendLabel = legend.selectAll('.pie.legendLabel')
                 .data(plotData)
@@ -221,4 +338,4 @@ const pieChart = function() {
 
 }
 
-export { pieDatum, pieChart }
+export { pieChart }

@@ -4,7 +4,8 @@
 
 <head>
     <title>Demo</title>
-    <link href="https://fonts.googleapis.com/css?family=Encode+Sans+Condensed:500|Roboto+Condensed|Ubuntu" rel="stylesheet">
+    <link href="https://fonts.googlapis.com/css?family=Encode+Sans+Condensed:500|Roboto+Condensed|Ubuntu" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.rawgit.com/Chalarangelo/mini.css/v2.3.6/dist/mini-default.min.css">
 </head>
 
 <body>
@@ -14,7 +15,37 @@
 
     <center>
         <div id="main">
-            <div class='tooltip'></div>
+            <div class="tabs">
+
+                <input type="radio" name="tab-group" id="bar" checked aria-hidden="true">
+                <label for="bar" aria-hidden="true">Bar Chart</label>
+                <div class="plot-tab" id="bar-main"></div>
+
+                <input type="radio" name="tab-group" id="scatter" aria-hidden="true">
+                <label for="scatter" aria-hidden="true">Scatter Plot</label>
+                <div class="plot-tab" id="scatter-main"></div>
+
+                <input type="radio" name="tab-group" id="line" aria-hidden="true">
+                <label for="line" aria-hidden="true">Line Plot</label>
+                <div class="plot-tab" id="line-main"></div>
+
+                <input type="radio" name="tab-group" id="pie" aria-hidden="true">
+                <label for="pie" aria-hidden="true">Pie Chart</label>
+                <div class="plot-tab" id="pie-main"></div>
+
+                <input type="radio" name="tab-group" id="stacked" aria-hidden="true">
+                <label for="stacked" aria-hidden="true">Stacked Bar</label>
+                <div class="plot-tab" id="stacked-main"></div>
+
+                <input type="radio" name="tab-group" id="box" aria-hidden="true">
+                <label for="box" aria-hidden="true">Box Plot</label>
+                <div class="plot-tab" id="box-main"></div>
+
+                <input type="radio" name="tab-group" id="hist" aria-hidden="true">
+                <label for="hist" aria-hidden="true">Histogram</label>
+                <div class="plot-tab" id="hist-main"></div>
+
+            </div>
         </div>
     </center>
 
@@ -25,9 +56,13 @@
             font-family: 'Ubuntu', sans-serif;
         }
         
+        .plot-tab {
+            height: 100% !important;
+        }
+        
         #main {
-            /*height: 80vh;*/
-            /*width: 90vw;*/
+            height: 89vh;
+            width: 90vw;
             border-radius: 10px;
             border: 1px#bebebe solid;
             padding: 20px;

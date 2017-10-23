@@ -59,7 +59,7 @@
 /******/ 	
 /******/ 	
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "364c7db1f79943327e81"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "1d0fb9400f1a1e32e773"; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentParents = []; // eslint-disable-line no-unused-vars
@@ -35687,7 +35687,7 @@ const multilineChart = function () {
 
             multilineFigure.enter().append("path").attr("class", "line graph").attr("fill", "none").attr("stroke", function (d) {
                 return colorObj[d.name];
-            }).attr("stroke-width", 1).attr("d", function (d) {
+            }).attr("stroke-width", 3).attr("d", function (d) {
                 return line(d['values']);
             });
 
@@ -35917,6 +35917,18 @@ const multilineChart = function () {
         return chart;
     };
 
+    chart.xLabel = function (_) {
+        if (!arguments.length) return xLabel;
+        xLabel = _;
+        return chart;
+    };
+
+    chart.yLabel = function (_) {
+        if (!arguments.length) return yLabel;
+        yLabel = _;
+        return chart;
+    };
+
     return chart;
 };
 
@@ -35927,8 +35939,7 @@ const multilineChart = function () {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* unused harmony export pieDatum */
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return pieChart; });
+/* unused harmony export pieChart */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__chartUtils_js__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_js__ = __webpack_require__(3);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__tooltip_js__ = __webpack_require__(4);
@@ -35939,22 +35950,6 @@ const _ = __webpack_require__(1);
 
 
 
-
-const pieDatum = function (data) {
-    const kmerLables = { 1: 'Monomer', 2: 'Dimer', 3: 'Trimer', 4: 'Tetramer', 5: 'Pentamer', 6: 'Hexamer' };
-    let pieData = { 'Monomer': 0, 'Dimer': 0, 'Trimer': 0, 'Tetramer': 0, 'Pentamer': 0, 'Hexamer': 0 };
-    for (let d in data) {
-        d = data[d];
-        let kmer = kmerLables[d.name.length];
-        pieData[kmer] += parseInt(d.value);
-    }
-    const total = _.sum(Object.values(pieData));
-
-    pieData = _.map(Object.keys(pieData), function (d) {
-        return { name: d, value: pieData[d], percentage: Number((pieData[d] * 100 / total).toFixed(2)), view: 1 };
-    });
-    return pieData;
-};
 
 /*-- 1. Data format
      data type: List of Objects
@@ -36024,7 +36019,7 @@ const pieChart = function () {
                 return d.view == 1;
             });
             let totalValue = _.sumBy(currentData, d => {
-                return d.value;
+                return parseFloat(d.value);
             });
             currentData = _.map(currentData, d => {
                 d.percentage = parseFloat((d.value / totalValue * 100).toFixed(2));return d;
@@ -36056,11 +36051,67 @@ const pieChart = function () {
                 };
             });
 
-            plotArcGroup.append("text").attr("transform", function (d) {
-                return "translate(" + path.centroid(d) + ")";
-            }).attr("dy", "0.35em").style("font-size", "0.7em").style("text-anchor", "center").text(function (d) {
-                return d.data.percentage + "%";
+            plotArcGroup.append('line').attr('class', 'labelLine1').transition().delay(250).duration(250).attr('x1', function (d) {
+                return path.centroid(d)[0];
+            }).attr('y1', function (d) {
+                return path.centroid(d)[1];
+            }).attr('x2', function (d) {
+                let m = (path.centroid(d)[1] / path.centroid(d)[0]).toFixed(2);
+                let mod = path.centroid(d)[0] / Math.abs(path.centroid(d)[0]);
+                let x2 = mod * ((radius + 10) / Math.sqrt(1 + m * m));
+                return x2;
+            }).attr('y2', function (d) {
+                let m = (path.centroid(d)[1] / path.centroid(d)[0]).toFixed(2);
+                let mod = path.centroid(d)[0] / Math.abs(path.centroid(d)[0]);
+                let x2 = mod * ((radius + 10) / Math.sqrt(1 + m * m));
+                return m * x2;
+            }).style('stroke', function (d, i) {
+                return colorObj[d.data.name];
             });
+
+            plotArcGroup.append('line').attr('class', 'labelLine2').transition().delay(250).duration(250).attr('x1', function (d) {
+                let m = (path.centroid(d)[1] / path.centroid(d)[0]).toFixed(2);
+                let mod = path.centroid(d)[0] / Math.abs(path.centroid(d)[0]);
+                let x1 = mod * ((radius + 10) / Math.sqrt(1 + m * m));
+                return x1;
+            }).attr('y1', function (d) {
+                let m = (path.centroid(d)[1] / path.centroid(d)[0]).toFixed(2);
+                let mod = path.centroid(d)[0] / Math.abs(path.centroid(d)[0]);
+                let x1 = mod * ((radius + 10) / Math.sqrt(1 + m * m));
+                return m * x1;
+            }).attr('x2', function (d) {
+                let m = (path.centroid(d)[1] / path.centroid(d)[0]).toFixed(2);
+                let mod = path.centroid(d)[0] / Math.abs(path.centroid(d)[0]);
+                let x1 = mod * ((radius + 10) / Math.sqrt(1 + m * m));
+                return x1 + mod * 20;
+            }).attr('y2', function (d) {
+                let m = (path.centroid(d)[1] / path.centroid(d)[0]).toFixed(2);
+                let mod = path.centroid(d)[0] / Math.abs(path.centroid(d)[0]);
+                let x1 = mod * ((radius + 10) / Math.sqrt(1 + m * m));
+                return m * x1;
+            }).style('stroke', function (d, i) {
+                return colorObj[d.data.name];
+            });
+
+            plotArcGroup.append('text').attr('class', 'labelText').transition().attr("dy", "0.35em").style("font-size", "0.7em").delay(250).duration(250).attr('transform', function (d) {
+                let m = (path.centroid(d)[1] / path.centroid(d)[0]).toFixed(2);
+                let mod = path.centroid(d)[0] / Math.abs(path.centroid(d)[0]);
+                let x = mod * ((radius + 10) / Math.sqrt(1 + m * m));
+                return `translate(${x + mod * 25}, ${m * x})`;
+            }).style('text-anchor', function (d) {
+                let mod = path.centroid(d)[0] / Math.abs(path.centroid(d)[0]);
+                let ta = mod < 0 ? 'end' : 'start';
+                return ta;
+            }).style('margin', '4px').text(function (d) {
+                return `${d.data.percentage}%`;
+            });
+
+            // plotArcGroup.append("text")
+            //     .attr("transform", function(d) { return `translate(${path.centroid(d)})`; })
+            //     .attr("dy", "0.35em")
+            //     .style("font-size", "0.7em")
+            //     .style("text-anchor", "center")
+            //     .text(function(d) { return `${d.data.name} ${d.data.percentage}%`; });
 
             plotArc.select("path").call(pieTooltip).transition().duration(250).attrTween('d', function (d) {
                 const i = d3.interpolate(d.startAngle + 0, d.endAngle);
@@ -36071,11 +36122,69 @@ const pieChart = function () {
                 return colorObj[d.data.name];
             });
 
-            plotArc.select("text").transition().delay(250).duration(250).attr("transform", function (d) {
-                console.log(d);return "translate(" + path.centroid(d) + ")";
-            }).attr("dy", "0.35em").style("font-size", "0.7em").style("text-anchor", "center").text(function (d) {
-                return d.data.percentage + "%";
+            plotArc.select('line.labelLine1').attr('class', 'labelLine1').transition().delay(250).duration(250).attr('x1', function (d) {
+                return path.centroid(d)[0];
+            }).attr('y1', function (d) {
+                return path.centroid(d)[1];
+            }).attr('x2', function (d) {
+                let m = (path.centroid(d)[1] / path.centroid(d)[0]).toFixed(2);
+                let mod = path.centroid(d)[0] / Math.abs(path.centroid(d)[0]);
+                let x2 = mod * ((radius + 10) / Math.sqrt(1 + m * m));
+                return x2;
+            }).attr('y2', function (d) {
+                let m = (path.centroid(d)[1] / path.centroid(d)[0]).toFixed(2);
+                let mod = path.centroid(d)[0] / Math.abs(path.centroid(d)[0]);
+                let x2 = mod * ((radius + 10) / Math.sqrt(1 + m * m));
+                return m * x2;
+            }).style('stroke', function (d, i) {
+                return colorObj[d.data.name];
             });
+
+            plotArc.select('line.labelLine2').attr('class', 'labelLine2').transition().delay(250).duration(250).attr('x1', function (d) {
+                let m = (path.centroid(d)[1] / path.centroid(d)[0]).toFixed(2);
+                let mod = path.centroid(d)[0] / Math.abs(path.centroid(d)[0]);
+                let x1 = mod * ((radius + 10) / Math.sqrt(1 + m * m));
+                return x1;
+            }).attr('y1', function (d) {
+                let m = (path.centroid(d)[1] / path.centroid(d)[0]).toFixed(2);
+                let mod = path.centroid(d)[0] / Math.abs(path.centroid(d)[0]);
+                let x1 = mod * ((radius + 10) / Math.sqrt(1 + m * m));
+                return m * x1;
+            }).attr('x2', function (d) {
+                let m = (path.centroid(d)[1] / path.centroid(d)[0]).toFixed(2);
+                let mod = path.centroid(d)[0] / Math.abs(path.centroid(d)[0]);
+                let x1 = mod * ((radius + 10) / Math.sqrt(1 + m * m));
+                return x1 + mod * 20;
+            }).attr('y2', function (d) {
+                let m = (path.centroid(d)[1] / path.centroid(d)[0]).toFixed(2);
+                let mod = path.centroid(d)[0] / Math.abs(path.centroid(d)[0]);
+                let x1 = mod * ((radius + 10) / Math.sqrt(1 + m * m));
+                return m * x1;
+            }).style('stroke', function (d, i) {
+                return colorObj[d.data.name];
+            });
+
+            plotArc.select('text.labelText').attr('class', 'labelText').transition().attr("dy", "0.35em").style("font-size", "0.7em").delay(250).duration(250).attr('transform', function (d) {
+                let m = (path.centroid(d)[1] / path.centroid(d)[0]).toFixed(2);
+                let mod = path.centroid(d)[0] / Math.abs(path.centroid(d)[0]);
+                let x = mod * ((radius + 10) / Math.sqrt(1 + m * m));
+                return `translate(${x + mod * 25}, ${m * x})`;
+            }).style('text-anchor', function (d) {
+                let mod = path.centroid(d)[0] / Math.abs(path.centroid(d)[0]);
+                let ta = mod < 0 ? 'end' : 'start';
+                return ta;
+            }).style('margin', '4px').text(function (d) {
+                return `${d.data.percentage}%`;
+            });
+
+            // plotArc.select("text").transition()
+            //     .delay(250)
+            //     .duration(250)
+            //     .attr("transform", function(d) { return "translate(" + path.centroid(d) + ")"; })
+            //     .attr("dy", "0.35em")
+            //     .style("font-size", "0.7em")
+            //     .style("text-anchor", "center")
+            //     .text(function(d) { return `${d.data.percentage}%`; });
         };
 
         const addLegend = function () {
@@ -36083,7 +36192,7 @@ const pieChart = function () {
             /* -- Adding Legend ----------------------------------------------------- */
             svg.select('.pie.legend').remove();
 
-            let legend = svg.append("g").attr('class', 'pie legend').attr('transform', `translate(${plotStartx + plotW / 2 + radius + 20}, ${plotStarty + 40})`);
+            let legend = svg.append("g").attr('class', 'pie legend').attr('transform', `translate(${plotStartx + plotW / 2 + radius + 60}, ${plotStarty + 40})`);
 
             let legendLabel = legend.selectAll('.pie.legendLabel').data(plotData).enter().append("g").attr("class", "pie legendLabel");
 
@@ -36160,7 +36269,7 @@ const pieChart = function () {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* unused harmony export stackChart */
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return stackChart; });
 /* unused harmony export stackData */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__chartUtils_js__ = __webpack_require__(2);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__tooltip_js__ = __webpack_require__(4);
@@ -36169,8 +36278,6 @@ const pieChart = function () {
 const d3 = __webpack_require__(0);
 
 
-
-const stackData = function () {};
 
 /*  1. Data format
     data type : List of Objects
@@ -36553,6 +36660,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__stackChart_js__ = __webpack_require__(7);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lineChart_js__ = __webpack_require__(5);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__pieChart_js__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__scatterChart_js__ = __webpack_require__(11);
 const _ = __webpack_require__(1);
 const d3 = __webpack_require__(0);
 
@@ -36560,53 +36668,65 @@ const d3 = __webpack_require__(0);
 
 
 
+
+// d3.tsv('../data/BT.tsv', function(data) {
+
+//     let names = _.map(_.uniqBy(data, 'repClass'), o => { return o.repClass; });
+//     let units = (_.map(_.uniqBy(data, 'units'), o => { return parseInt(o.units); })).sort();
+//     // names = ['AC', 'AG', 'AT', 'AAG'];
+//     data = _.map(names, o => { let values = _.map(_.filter(data, { repClass: o }), p => { return { x: parseInt(p.units), y: parseInt(p.freq) } }); return { name: o, values: values } });
+//     data = _.map(data, o => {
+//             let values = o.values;
+//             values = _.filter(values, d => { return d.x <= 50 && d.x >= 8; });
+//             // console.log(values);
+//             o.values = values;
+//             return o;
+//         })
+//         // console.log(data);
+//     const lineRoot = d3.select('#line-main');
+//     const newLineChart = multilineChart().data(data).margin({ top: 20, right: 20, bottom: 40, left: 80 }).xLabel('Repeat Units').yLabel('Frequency');
+//     lineRoot.call(newLineChart);
+
+// })
+
+/* Trial stack bar chart */
 d3.tsv('../data/data.tsv', function (data) {
 
-    /* Trial pie chart */
-    data = _.map(Object.keys(_.countBy(data, 'repEnd')), o => {
-        return { name: o, value: 39 };
+    console.log(data);
+
+    let keys = _.uniq(_.map(data, d => {
+        return d.repEnd;
+    }));
+    data = _.map(data, o => {
+        o[o['repEnd']] = parseInt(o['freq']);
+        o['x'] = o['repLen'];
+        delete o['repEnd'];
+        delete o['freq'];
+        return o;
+    });
+    data = _.map(_.groupBy(data, o => {
+        return o['repLen'];
+    }), d => {
+        let obj = {};
+        for (let a in d) {
+            a = d[a];for (let b in a) {
+                obj[b] = a[b];
+            }
+        }
+        return obj;
     });
 
-    const chartRoot = d3.select('#main');
-    const newPieChart = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__pieChart_js__["a" /* pieChart */])().data(data).piePosition('center');
+    const chartRoot = d3.select('#stacked-main');
+    const newStackedChart = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__stackChart_js__["a" /* stackChart */])().data(data).keys(keys).margin({ left: 60, top: 20, right: 20, bottom: 60 }).xLabel('Repeat Length').yLabel('Frequency').labelDistance(20);
 
-    chartRoot.call(newPieChart);
-
-    /* Trial multi line chart */
-    // let names = _.map(_.uniqBy(data, 'repEnd'), o => { return o.repEnd; });
-    // let lengths = (_.map(_.uniqBy(data, 'repLen'), o => { return parseInt(o.repLen); })).sort();
-
-    // data = _.map(names, o => { let values = _.map(_.filter(data, { repEnd: o }), p => { return { x: parseInt(p.repLen), y: parseInt(p.freq) } }); return { name: o, values: values } });
-
-    // const chartRoot = d3.select('#main');
-
-    // const newLineChart = multilineChart().data(data).margin({ top: 20, right: 20, bottom: 40, left: 80 });
-    // chartRoot.call(newLineChart);
-
-    /* Trial stack bar chart */
-    // let keys = _.uniq(_.map(data, d => { return d.repEnd; }));
-    // data = _.map(data, o => {
-    //     o[o['repEnd']] = parseInt(o['freq']);
-    //     o['x'] = o['repLen'];
-    //     delete o['repEnd'];
-    //     delete o['freq'];
-    //     return o;
-    // });
-    // data = _.map(_.groupBy(data, o => { return o['repLen']; }), d => {
-    //     let obj = {};
-    //     for (let a in d) { a = d[a]; for (let b in a) { obj[b] = a[b]; } }
-    //     return obj;
-    // });
-
-    // const chartRoot = d3.select('#main');
-    // const newStackedChart = stackChart().data(data).keys(keys)
-    //     .margin({ left: 60, top: 20, right: 20, bottom: 60 })
-    //     .xLabel('Repeat Length')
-    //     .yLabel('Frequency')
-    //     .labelDistance(20);
-
-    // chartRoot.call(newStackedChart);
+    chartRoot.call(newStackedChart);
 });
+
+// d3.tsv("../data/pie_data.tsv", function(data) {
+//     const pieRoot = d3.select('#pie-main');
+//     const newPieChart = pieChart().data(data).piePosition('center');
+//     pieRoot.call(newPieChart);
+// })
 
 /***/ }),
 /* 9 */
@@ -36661,6 +36781,279 @@ module.exports = function(module) {
 	}
 	return module;
 };
+
+
+/***/ }),
+/* 11 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* unused harmony export scatterChart */
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__chartUtils_js__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_js__ = __webpack_require__(3);
+
+
+const d3 = __webpack_require__(0);
+const _ = __webpack_require__(1);
+
+
+
+/* -------------------  Convert data readable for the bar chart function  -----------------------*/
+const scatterDatum = function (data, xVector, yVector, level) {
+    let dataOut = [];
+
+    for (let d in _.range(data.length)) {
+        d = data[d];
+        let dataObj = {};
+        dataObj.x = parseFloat(d[xVector]).toFixed(2);
+        dataObj.y = parseFloat(d[yVector]).toFixed(2);
+        dataObj.key = d.Organism;
+        dataObj.colorKey = d[level];
+        dataOut.push(dataObj);
+    }
+
+    const scatterObj = {
+        data: dataOut,
+        xLabel: tipNames[xVector],
+        yLabel: tipNames[yVector],
+        svgid: "graph-svg",
+        margin: { top: 20, right: 10, bottom: 50, left: 70 }
+    };
+
+    return scatterObj;
+};
+
+/*-- 1. Data format
+     data type: list of objects
+     sub : Each object has a three (key, value pairs)
+        (i) The xValue  (x, value)
+        (ii) The yValue (y, value)
+        (iii) The name of the line (name, value) #optional
+        (iv)  Group value (group, value) #optional
+    --*/
+
+const scatterChart = function (Obj) {
+
+    /* Defining defaults for different plotting parameters. */
+
+    let data = [];
+    let margin = { top: 40, right: 20, bottom: 40, left: 40 };
+
+    let xLabel = 'X-axis';
+    let yLabel = 'Y-axis';
+    let color = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["a" /* colorPalette */])(19, 700);
+    let rotateXtick = Obj.rotateXtick ? Obj.rotateXtick : 0; // Rotating the X-ticks
+
+    let xMax, xMin, yMax, yMin;
+
+    let chart = function (selection) {
+
+        const svg = selection.append('svg').attr('height', height).attr('width', width).attr('id', 'multiline-chart').attr('class', 'multiline');
+        let svgH = parseInt(svg.style('height').substr(0, svg.style('height').length - 2));
+        let svgW = parseInt(svg.style('width').substr(0, svg.style('width').length - 2));
+
+        data = _.map(data, d => {
+            d.view = 1;return d;
+        });
+        // _.forEach(data, function(o, i) { colorObj[o.name] = color[i]; });
+
+        const plotH = svgH - margin.top - margin.bottom; // Calculating the actual width of the plot
+        const plotW = svgW - margin.left - margin.right; // Calculating the actual height of the plot
+        const plotStartx = margin.left; // X-coordinate of the start of the plot
+        const plotStarty = margin.top; // Y-coordinate of the start of the plot
+
+        xMax = _.max(_.map(data, o => {
+            return parseFloat(o['x']);
+        }));
+        yMax = _.max(_.map(data, o => {
+            return parseFloat(o['y']);
+        }));
+        xMin = _.min(_.map(data, o => {
+            return parseFloat(o['x']);
+        }));
+        yMin = _.min(_.map(data, o => {
+            return parseFloat(o['y']);
+        }));
+
+        /* ---------------  Defining X-axis ------------------- */
+        const xScale = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["b" /* scale */])({ domain: [xMin, xMax], range: [plotStartx, plotStartx + plotW], scaleType: 'linear' });
+        const xAxis = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["c" /* axis */])({ scale: xScale, orient: 'bottom' });
+        const xAxisElement = svg.append('g').attr('class', 'scatter x axis').attr('transform', `translate(0, ${plotStarty + plotH})`);
+
+        /* ---------------  Defining Y-axis ------------------- */
+        const yScale = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["b" /* scale */])({ domain: [yMin, yMax], range: [plotH + plotStarty, plotStarty], scaleType: 'linear' });
+        const yAxis = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["c" /* axis */])({ scale: yScale, ticks: 6, tickformat: 'thousands' });
+        const yAxisElement = svg.append('g').attr('class', 'scatter y axis').attr('transform', `translate( ${margin.left} , 0)`);
+
+        let duration = 1000;
+        const plotCanvas = svg.append('g').attr('id', 'scatter-plotCanvas');
+
+        const draw = function () {
+            svg.select('.multiline.x.axis').call(xAxis);
+            svg.select('.multiline.y.axis').call(yAxis);
+
+            svg.selectAll('.axislabel').remove();
+            /* -- Adding X-axis label ----------------------------------------------- */
+            if (xLabel) {
+                __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["d" /* axislabel */])({
+                    selector: '.scatter.x.axis',
+                    orient: 'bottom',
+                    fontweight: 'regular',
+                    size: '1em',
+                    distance: labelDistance,
+                    text: xLabel,
+                    margin: margin
+                });
+            }
+
+            /* -- Adding Y-axis label ----------------------------------------------- */
+            if (yLabel) {
+                __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["d" /* axislabel */])({
+                    selector: '.scatter.y.axis',
+                    orient: 'left',
+                    fontweight: 'regular',
+                    size: '1em',
+                    distance: labelDistance,
+                    text: yLabel,
+                    margin: margin
+                });
+            }
+
+            plotCurrentData();
+        };
+
+        const plotCurrentData = function () {
+
+            let currentData = _.filter(data, o => {
+                return o.view == 1;
+            });
+
+            xMax = _.max(_.map(currentData, o => {
+                return parseFloat(o['x']);
+            }));
+            yMax = _.max(_.map(currentData, o => {
+                return parseFloat(o['y']);
+            }));
+            xMin = _.min(_.map(currentData, o => {
+                return parseFloat(o['x']);
+            }));
+            yMin = _.min(_.map(currentData, o => {
+                return parseFloat(o['y']);
+            }));
+            xScale.domain([xMin, xMax]);
+            yScale.domain([yMin, yMax]);
+            svg.select('.scatter.x.axis').call(xAxis);
+            svg.select('.scatter.y.axis').call(yAxis);
+
+            let scatterFigure = plotCanvas.selectAll(".scatter.dot").data(currentData);
+
+            scatterFigure.exit().remove();
+
+            scatterFigure.enter().append("circle").attr("class", "scatter dot").attr("fill", color[0]).attr("r", 6).attr("cx", function (d) {
+                return xScale(d.x);
+            }).attr("cy", function (d) {
+                return yScale(d.y);
+            });
+
+            scatterFigure.transition().duration(750).attr("fill", color[0]).attr("r", 6).attr("cx", function (d) {
+                return xScale(d.x);
+            }).attr("cy", function (d) {
+                return yScale(d.y);
+            });
+        };
+
+        const updateData = function () {
+            xMax = _.max(_.map(data, o => {
+                return parseFloat(o['x']);
+            }));
+            yMax = _.max(_.map(data, o => {
+                return parseFloat(o['y']);
+            }));
+            xMin = _.min(_.map(data, o => {
+                return parseFloat(o['x']);
+            }));
+            yMin = _.min(_.map(data, o => {
+                return parseFloat(o['y']);
+            }));
+            xScale.domain([xMin, xMax]);
+            yScale.domain([yMin, yMax]);
+
+            data = _.map(data, d => {
+                d.view = 1;return d;
+            });
+            draw();
+        };
+
+        const updateResize = function () {
+            duration = 0;
+            svgH = parseInt(svg.style('height').substr(0, svg.style('height').length - 2));
+            svgW = parseInt(svg.style('width').substr(0, svg.style('width').length - 2));
+
+            plotH = svgH - margin.top - margin.bottom; // Calculating the actual width of the plot
+            plotW = svgW - margin.left - margin.right; // Calculating the actual height of the plot
+
+            xScale.range([plotStartx, plotStartx + plotW]);
+            yScale.range([plotH + plotStarty, plotStarty]);
+
+            yAxisElement.attr('transform', 'translate(' + margin.left + ', 0)');
+            xAxisElement.attr('transform', 'translate(0,' + (plotStarty + plotH) + ')');
+
+            draw();
+        };
+    };
+
+    chart.data = function (_) {
+        if (!arguments.length) return data;
+        data = _;
+        if (typeof updateData === 'function') updateData();
+        return chart;
+    };
+
+    chart.height = function (_) {
+        if (!arguments.length) return height;
+        height = _;
+        return chart;
+    };
+
+    chart.width = function (_) {
+        if (!arguments.length) return width;
+        width = _;
+        return chart;
+    };
+
+    chart.x = function (_) {
+        if (!arguments.length) return x;
+        x = _;
+        return chart;
+    };
+
+    chart.y = function (_) {
+        if (!arguments.length) return y;
+        y = _;
+        return chart;
+    };
+
+    chart.margin = function (_) {
+        if (!arguments.length) return margin;
+        margin = _;
+        return chart;
+    };
+
+    chart.xLabel = function (_) {
+        if (!arguments.length) return xLabel;
+        xLabel = _;
+        return chart;
+    };
+
+    chart.yLabel = function (_) {
+        if (!arguments.length) return yLabel;
+        yLabel = _;
+        return chart;
+    };
+
+    return chart;
+};
+
 
 
 /***/ })

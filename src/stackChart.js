@@ -1,15 +1,8 @@
 "use strict";
 
-
-
 const d3 = require('d3')
 import { scale, axis, axislabel, rotateXticks, colorPalette } from "./chartUtils.js"
 import { tooltip } from "./tooltip.js"
-
-
-const stackData = function() {
-
-}
 
 /*  1. Data format
     data type : List of Objects
