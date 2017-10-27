@@ -1,8 +1,10 @@
 'use strict';
 
 const d3 = require('d3');
-import { scale, axis, axislabel, rotateXticks } from "./chartUtils.js"
+const _ = require('lodash');
+import { scale, axis, axislabel, rotateXticks, colorPalette } from "./chartUtils.js"
 import { getUniqueElements } from "./utils.js"
+import { tooltip } from "./tooltip.js"
 
 /*-- 1. Data format
      data type: list of objects
@@ -14,15 +16,16 @@ import { getUniqueElements } from "./utils.js"
 const barChart = function() {
 
     // Customizable chart properties
-    const data = [];
+    let data = [];
     let width = '80vw';
     let height = '80vh';
     let margin = { top: 20, right: 20, bottom: 40, left: 40 };
 
-    let color = "Teal";
-    let xLabel;
-    let yLabel;
-    const margin = { top: 40, right: 20, bottom: 40, left: 40 };
+    let color = {};
+    let xLabel = "X-axis";
+    let yLabel = "Y-axis";
+    let windowResize = true;
+    let labelDistance = 20;
 
     let chart = function(selection) {
 
@@ -30,10 +33,18 @@ const barChart = function() {
         let svgH = parseInt(svg.style('height').substr(0, svg.style('height').length - 2));
         let svgW = parseInt(svg.style('width').substr(0, svg.style('width').length - 2));
 
+        let groups = _.uniq(_.map(data, 'group'));
+        if (groups.length == 0) {
+            data = _.map(data, d => { d.group = 'default'; return d; });
+            color = { 'default': colorPalette(1, 700) };
+        } else {
+            let colors = colorPalette(groups.length, 500);
+            for (let i in groups) { color[groups[i]] = colors[i]; }
+        }
         data = _.map(data, d => { d.view = 1; return d; })
 
-        let yMax = _.max(_.map(data, o => { return d3.value }));
-        let yMin = _.min(_.map(data, o => { return d3.value }));
+        let yMax = _.max(_.map(data, d => { return d.value }));
+        let yMin = _.min(_.map(data, d => { return d.value }));
         let xticks = _.map(data, o => { return o.name });
 
         let plotH = svgH - margin.top - margin.bottom; // Calculating the actual width of the plot
@@ -83,7 +94,8 @@ const barChart = function() {
         const plotCanvas = svg.append('g').attr('id', 'bar-plotCanvas');
 
         const draw = function() {
-            let currentPlotData = _.filter(plotData, o => { return o.view == 1; })
+            duration = 1000;
+            let currentPlotData = _.filter(data, o => { return o.view == 1; })
 
             svg.select('.bar.x.axis').call(xAxis);
             svg.select('.bar.y.axis').call(yAxis);
@@ -128,24 +140,24 @@ const barChart = function() {
 
             barFigure.attr('width', barWidth)
                 .attr('x', function(d) { return xScale(d.name) + xScale.bandwidth() / 2 - barWidth / 2; })
-                .attr('y', function(d) { return yScale(0); })
-                .attr('fill', color)
+                .attr('y', function(d) { return yScale(yMin); })
+                .attr('fill', d => { return color[d.group]; })
                 .transition()
                 .duration(duration)
                 .attr('y', function(d) { return yScale(d.value); })
-                .attr('height', function(d) { return yScale(0) - yScale(d.value); });
+                .attr('height', function(d) { return yScale(yMin) - yScale(d.value); });
 
             barFigure.enter()
                 .append('rect')
                 .attr('class', 'bar')
                 .attr('width', barWidth)
                 .attr('x', function(d) { return xScale(d.name) + xScale.bandwidth() / 2 - barWidth / 2; })
-                .attr('y', function(d) { return yScale(0); })
-                .attr('fill', color)
+                .attr('y', function(d) { return yScale(yMin); })
+                .attr('fill', d => { console.log(d.group); return color[d.group]; })
                 .transition()
                 .duration(duration)
                 .attr('y', function(d) { return yScale(d.value); })
-                .attr('height', function(d) { return yScale(0) - yScale(d.value); });
+                .attr('height', function(d) { return yScale(yMin) - yScale(d.value); });
         }
 
         const updateData = function() {
@@ -153,9 +165,9 @@ const barChart = function() {
             duration = 1000;
             data = _.map(data, d => { d.view = 1; return d; });
 
-            let yMax = _.max(_.map(data, o => { return d3.value }));
-            let yMin = _.min(_.map(data, o => { return d3.value }));
-            let xticks = _.map(data, o => { return o.name });
+            yMax = _.max(_.map(data, d => { return d.value }));
+            yMin = _.min(_.map(data, d => { return d.value }));
+            xticks = _.map(data, o => { return o.name });
 
             xScale.domain(xticks);
             yScale.domain([yMin, yMax]);
@@ -163,8 +175,27 @@ const barChart = function() {
             draw();
         }
 
-        draw();
+        const updateResize = function() {
 
+            svgH = parseInt(svg.style('height').substr(0, svg.style('height').length - 2));
+            svgW = parseInt(svg.style('width').substr(0, svg.style('width').length - 2));
+
+            plotH = svgH - margin.top - margin.bottom;
+            plotW = svgW - margin.left - margin.right;
+            plotStartx = margin.left;
+            plotStarty = margin.top;
+            xScale.range([plotStartx, plotStartx + plotW]);
+            yScale.range([plotH + plotStarty, plotStarty]);
+
+            yAxisElement.attr('transform', `translate(${margin.left},0)`);
+            xAxisElement.attr('transform', `translate(0,' ${plotStarty + plotH})`);
+
+            draw();
+        }
+
+        if (windowResize) { window.onresize = _.debounce(updateResize, 300); }
+
+        draw();
     }
 
     chart.data = function(_) {
@@ -173,36 +204,80 @@ const barChart = function() {
         if (typeof updateData === 'function') updateData();
         return chart;
     }
+
+    chart.width = function(_) {
+        if (!arguments.length) return width;
+        width = _;
+        return chart;
+    }
+
+    chart.height = function(_) {
+        if (!arguments.length) return height;
+        height = _;
+        return chart;
+    }
+
+    chart.color = function(_) {
+        if (!arguments.length) return color;
+        color = _;
+        return chart;
+    }
+
+    chart.margin = function(_) {
+        if (!arguments.length) return margin;
+        margin = _;
+        return chart;
+    }
+
+    chart.xLabel = function(_) {
+        if (!arguments.length) return xLabel;
+        xLabel = _;
+        return chart;
+    }
+
+    chart.yLabel = function(_) {
+        if (!arguments.length) return yLabel;
+        yLabel = _;
+        return chart;
+    }
+
+    chart.windowResize = function(_) {
+        if (!arguments.length) return windowResize;
+        windowResize = _;
+        return chart;
+    }
+
+    return chart;
 }
 
 
 /* -- Defining Sort Bar Function --------------------------------------- */
-const sortChange = function(time = 1000) {
+// const sortChange = function(time = 1000) {
 
-    console.log('sortChange called!')
-        // Copy-on-write since tweens are evaluated after a delay.
-    const barsort = document.getElementById('bar-sort');
-    var x0 = xScale.domain(data.sort(barsort.checked ?
+//     console.log('sortChange called!')
+//         // Copy-on-write since tweens are evaluated after a delay.
+//     const barsort = document.getElementById('bar-sort');
+//     var x0 = xScale.domain(data.sort(barsort.checked ?
 
-                function(a, b) { return b.value - a.value; } :
-                function(a, b) { return d3.ascending(a.key, b.key); })
-            .map(function(d) { return d.key; }))
-        .copy();
+//                 function(a, b) { return b.value - a.value; } :
+//                 function(a, b) { return d3.ascending(a.key, b.key); })
+//             .map(function(d) { return d.key; }))
+//         .copy();
 
-    svg.selectAll(".bar")
-        .sort(function(a, b) { return x0(a.key) - x0(b.key); });
+//     svg.selectAll(".bar")
+//         .sort(function(a, b) { return x0(a.key) - x0(b.key); });
 
-    let transition = svg.transition().duration(750);
-    let delay = function(d, i) { return i * (time / data.length); };
+//     let transition = svg.transition().duration(750);
+//     let delay = function(d, i) { return i * (time / data.length); };
 
-    transition.selectAll(".bar")
-        .delay(delay)
-        .attr("x", function(d) { return x0(d.key) + x0.bandwidth() / 2 - barWidth / 2; });
+//     transition.selectAll(".bar")
+//         .delay(delay)
+//         .attr("x", function(d) { return x0(d.key) + x0.bandwidth() / 2 - barWidth / 2; });
 
-    transition.select(".x.axis")
-        .call(xAxis)
-        .selectAll("g")
-        .delay(delay);
-}
+//     transition.select(".x.axis")
+//         .call(xAxis)
+//         .selectAll("g")
+//         .delay(delay);
+// }
 
 export { barChart }

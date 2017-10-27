@@ -27,8 +27,6 @@ const pieChart = function() {
     let windowResize = true;
     let pieRadius;
     let radius;
-
-    let updateData;
     const margin = { top: 40, right: 40, bottom: 40, left: 40 };
 
     const legendWidth = 20;

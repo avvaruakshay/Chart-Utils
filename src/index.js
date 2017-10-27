@@ -8,9 +8,10 @@ import { scatterChart } from './scatterChart.js'
 import { barChart } from './barChart.js'
 
 /* Trial stack bar chart */
-d3.tsv('../data/bar_data.tsv', function(data) {
+d3.tsv('../data/bar_data_2.tsv', function(data) {
     const barchartRoot = d3.select('#bar-main');
-    const newBarChart = barChart().data(data);
+    const newBarChart = barChart().data(data).margin({ top: 40, bottom: 60, left: 80, right: 30 });
+    barchartRoot.call(newBarChart);
 });
 
 d3.tsv('../data/BT.tsv', function(data) {

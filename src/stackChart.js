@@ -355,7 +355,6 @@ const stackChart = function() {
         return chart;
     }
 
-
     return chart
 
 }

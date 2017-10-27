@@ -59,7 +59,7 @@
 /******/ 	
 /******/ 	
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "d38343f6c09e0815b0a4"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "34b574d2c7f48e0fa2b1"; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentParents = []; // eslint-disable-line no-unused-vars
@@ -706,7 +706,7 @@
 /******/ 	__webpack_require__.h = function() { return hotCurrentHash; };
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return hotCreateRequire(8)(__webpack_require__.s = 8);
+/******/ 	return hotCreateRequire(10)(__webpack_require__.s = 10);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -34671,7 +34671,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
   }
 }.call(this));
 
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(9), __webpack_require__(10)(module)))
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(11), __webpack_require__(12)(module)))
 
 /***/ }),
 /* 2 */
@@ -35510,6 +35510,322 @@ const tooltip = function () {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return barChart; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__chartUtils_js__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_js__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__tooltip_js__ = __webpack_require__(4);
+
+
+const d3 = __webpack_require__(0);
+const _ = __webpack_require__(1);
+
+
+
+
+/*-- 1. Data format
+     data type: list of objects
+     sub : Each object has a three (key, value pairs)
+        (i) The name (name, value)
+        (ii) The numerical Value (value, value)
+        (iv)  Group value (group, value) #optional
+    --*/
+const barChart = function () {
+
+    // Customizable chart properties
+    let data = [];
+    let width = '80vw';
+    let height = '80vh';
+    let margin = { top: 20, right: 20, bottom: 40, left: 40 };
+
+    let color = {};
+    let xLabel = "X-axis";
+    let yLabel = "Y-axis";
+    let windowResize = true;
+    let labelDistance = 20;
+
+    let chart = function (selection) {
+
+        const svg = selection.append('svg').attr('height', height).attr('width', width).attr('id', 'bar-chart').attr('class', 'bar');
+        let svgH = parseInt(svg.style('height').substr(0, svg.style('height').length - 2));
+        let svgW = parseInt(svg.style('width').substr(0, svg.style('width').length - 2));
+
+        let groups = _.uniq(_.map(data, 'group'));
+        if (groups.length == 0) {
+            data = _.map(data, d => {
+                d.group = 'default';return d;
+            });
+            color = { 'default': __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["a" /* colorPalette */])(1, 700) };
+        } else {
+            let colors = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["a" /* colorPalette */])(groups.length, 500);
+            for (let i in groups) {
+                color[groups[i]] = colors[i];
+            }
+        }
+        data = _.map(data, d => {
+            d.view = 1;return d;
+        });
+
+        let yMax = _.max(_.map(data, d => {
+            return d.value;
+        }));
+        let yMin = _.min(_.map(data, d => {
+            return d.value;
+        }));
+        let xticks = _.map(data, o => {
+            return o.name;
+        });
+
+        let plotH = svgH - margin.top - margin.bottom; // Calculating the actual width of the plot
+        let plotW = svgW - margin.left - margin.right; // Calculating the actual height of the plot
+        let plotStartx = margin.left; // X-coordinate of the start of the plot
+        let plotStarty = margin.top; // Y-coordinate of the start of the plot
+
+        /* --  Defining the scale for X-axis ------------------------------------ */
+        let xScale = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["b" /* scale */])({
+            domain: xticks,
+            range: [plotStartx, plotStartx + plotW],
+            scaleType: 'band',
+            padding: 0,
+            align: 0
+        });
+
+        /* -- Defining X-axis -------------------------------------- */
+        let xAxis = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["c" /* axis */])({
+            scale: xScale,
+            orient: 'bottom'
+        });
+
+        let xAxisElement = svg.append('g').attr('class', 'bar x axis').attr('transform', `translate(0, ${plotStarty + plotH})`);
+
+        /* -- Defining the scale for Y-axis ----------------------------------------- */
+        let yScale = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["b" /* scale */])({
+            domain: [yMin, yMax],
+            range: [plotH + plotStarty, plotStarty],
+            scaleType: 'linear'
+        });
+
+        /* -- Defining Y-axis --------------------------------------- */
+        let yAxis = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["c" /* axis */])({
+            scale: yScale,
+            ticks: 4,
+            tickformat: 'thousands'
+        });
+
+        let yAxisElement = svg.append('g').attr('class', 'bar y axis').attr('transform', `translate( ${margin.left} , 0)`);
+
+        let duration = 1000;
+        const plotCanvas = svg.append('g').attr('id', 'bar-plotCanvas');
+
+        const draw = function () {
+            duration = 1000;
+            let currentPlotData = _.filter(data, o => {
+                return o.view == 1;
+            });
+
+            svg.select('.bar.x.axis').call(xAxis);
+            svg.select('.bar.y.axis').call(yAxis);
+            svg.selectAll('.axislabel').remove();
+
+            /* -- Adding X-axis label ----------------------------------------------- */
+            if (xLabel) {
+                __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["d" /* axislabel */])({
+                    selector: '.bar.x.axis',
+                    orient: 'bottom',
+                    fontweight: 'regular',
+                    size: '1em',
+                    distance: labelDistance,
+                    text: xLabel,
+                    margin: margin
+                });
+            }
+
+            /* -- Adding Y-axis label ----------------------------------------------- */
+            if (yLabel) {
+                __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["d" /* axislabel */])({
+                    selector: '.bar.y.axis',
+                    orient: 'left',
+                    fontweight: 'regular',
+                    size: '1em',
+                    distance: labelDistance,
+                    text: yLabel,
+                    margin: margin
+                });
+            }
+
+            let barWidth;
+            if (xScale.bandwidth() <= 100) {
+                barWidth = xScale.bandwidth();
+            } else {
+                barWidth = 100;
+            }
+
+            /* -- Plotting the BARS ------------------------------------------------- */
+
+            const barFigure = plotCanvas.selectAll('rect').data(currentPlotData);
+
+            barFigure.exit().transition().duration(100).remove();
+
+            barFigure.attr('width', barWidth).attr('x', function (d) {
+                return xScale(d.name) + xScale.bandwidth() / 2 - barWidth / 2;
+            }).attr('y', function (d) {
+                return yScale(yMin);
+            }).attr('fill', d => {
+                return color[d.group];
+            }).transition().duration(duration).attr('y', function (d) {
+                return yScale(d.value);
+            }).attr('height', function (d) {
+                return yScale(yMin) - yScale(d.value);
+            });
+
+            barFigure.enter().append('rect').attr('class', 'bar').attr('width', barWidth).attr('x', function (d) {
+                return xScale(d.name) + xScale.bandwidth() / 2 - barWidth / 2;
+            }).attr('y', function (d) {
+                return yScale(yMin);
+            }).attr('fill', d => {
+                console.log(d.group);return color[d.group];
+            }).transition().duration(duration).attr('y', function (d) {
+                return yScale(d.value);
+            }).attr('height', function (d) {
+                return yScale(yMin) - yScale(d.value);
+            });
+        };
+
+        const updateData = function () {
+
+            duration = 1000;
+            data = _.map(data, d => {
+                d.view = 1;return d;
+            });
+
+            yMax = _.max(_.map(data, d => {
+                return d.value;
+            }));
+            yMin = _.min(_.map(data, d => {
+                return d.value;
+            }));
+            xticks = _.map(data, o => {
+                return o.name;
+            });
+
+            xScale.domain(xticks);
+            yScale.domain([yMin, yMax]);
+
+            draw();
+        };
+
+        const updateResize = function () {
+
+            svgH = parseInt(svg.style('height').substr(0, svg.style('height').length - 2));
+            svgW = parseInt(svg.style('width').substr(0, svg.style('width').length - 2));
+
+            plotH = svgH - margin.top - margin.bottom;
+            plotW = svgW - margin.left - margin.right;
+            plotStartx = margin.left;
+            plotStarty = margin.top;
+            xScale.range([plotStartx, plotStartx + plotW]);
+            yScale.range([plotH + plotStarty, plotStarty]);
+
+            yAxisElement.attr('transform', `translate(${margin.left},0)`);
+            xAxisElement.attr('transform', `translate(0,' ${plotStarty + plotH})`);
+
+            draw();
+        };
+
+        if (windowResize) {
+            window.onresize = _.debounce(updateResize, 300);
+        }
+
+        draw();
+    };
+
+    chart.data = function (_) {
+        if (!arguments.length) return data;
+        data = _;
+        if (typeof updateData === 'function') updateData();
+        return chart;
+    };
+
+    chart.width = function (_) {
+        if (!arguments.length) return width;
+        width = _;
+        return chart;
+    };
+
+    chart.height = function (_) {
+        if (!arguments.length) return height;
+        height = _;
+        return chart;
+    };
+
+    chart.color = function (_) {
+        if (!arguments.length) return color;
+        color = _;
+        return chart;
+    };
+
+    chart.margin = function (_) {
+        if (!arguments.length) return margin;
+        margin = _;
+        return chart;
+    };
+
+    chart.xLabel = function (_) {
+        if (!arguments.length) return xLabel;
+        xLabel = _;
+        return chart;
+    };
+
+    chart.yLabel = function (_) {
+        if (!arguments.length) return yLabel;
+        yLabel = _;
+        return chart;
+    };
+
+    chart.windowResize = function (_) {
+        if (!arguments.length) return windowResize;
+        windowResize = _;
+        return chart;
+    };
+
+    return chart;
+};
+
+/* -- Defining Sort Bar Function --------------------------------------- */
+// const sortChange = function(time = 1000) {
+
+//     console.log('sortChange called!')
+//         // Copy-on-write since tweens are evaluated after a delay.
+//     const barsort = document.getElementById('bar-sort');
+//     var x0 = xScale.domain(data.sort(barsort.checked ?
+
+//                 function(a, b) { return b.value - a.value; } :
+//                 function(a, b) { return d3.ascending(a.key, b.key); })
+//             .map(function(d) { return d.key; }))
+//         .copy();
+
+//     svg.selectAll(".bar")
+//         .sort(function(a, b) { return x0(a.key) - x0(b.key); });
+
+//     let transition = svg.transition().duration(750);
+//     let delay = function(d, i) { return i * (time / data.length); };
+
+//     transition.selectAll(".bar")
+//         .delay(delay)
+//         .attr("x", function(d) { return x0(d.key) + x0.bandwidth() / 2 - barWidth / 2; });
+
+//     transition.select(".x.axis")
+//         .call(xAxis)
+//         .selectAll("g")
+//         .delay(delay);
+// }
+
+
+
+/***/ }),
+/* 6 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return multilineChart; });
 /* unused harmony export lineDatum */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__chartUtils_js__ = __webpack_require__(2);
@@ -35934,7 +36250,7 @@ const multilineChart = function () {
 
 
 /***/ }),
-/* 6 */
+/* 7 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -35970,8 +36286,6 @@ const pieChart = function () {
     let windowResize = true;
     let pieRadius;
     let radius;
-
-    let updateData;
     const margin = { top: 40, right: 40, bottom: 40, left: 40 };
 
     const legendWidth = 20;
@@ -36264,7 +36578,280 @@ const pieChart = function () {
 
 
 /***/ }),
-/* 7 */
+/* 8 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* unused harmony export scatterChart */
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__chartUtils_js__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_js__ = __webpack_require__(3);
+
+
+const d3 = __webpack_require__(0);
+const _ = __webpack_require__(1);
+
+
+
+/* -------------------  Convert data readable for the bar chart function  -----------------------*/
+const scatterDatum = function (data, xVector, yVector, level) {
+    let dataOut = [];
+
+    for (let d in _.range(data.length)) {
+        d = data[d];
+        let dataObj = {};
+        dataObj.x = parseFloat(d[xVector]).toFixed(2);
+        dataObj.y = parseFloat(d[yVector]).toFixed(2);
+        dataObj.key = d.Organism;
+        dataObj.colorKey = d[level];
+        dataOut.push(dataObj);
+    }
+
+    const scatterObj = {
+        data: dataOut,
+        xLabel: tipNames[xVector],
+        yLabel: tipNames[yVector],
+        svgid: "graph-svg",
+        margin: { top: 20, right: 10, bottom: 50, left: 70 }
+    };
+
+    return scatterObj;
+};
+
+/*-- 1. Data format
+     data type: list of objects
+     sub : Each object has a three (key, value pairs)
+        (i) The xValue  (x, value)
+        (ii) The yValue (y, value)
+        (iii) The name of the line (name, value) #optional
+        (iv)  Group value (group, value) #optional
+    --*/
+
+const scatterChart = function (Obj) {
+
+    /* Defining defaults for different plotting parameters. */
+
+    let data = [];
+    let margin = { top: 40, right: 20, bottom: 40, left: 40 };
+
+    let xLabel = 'X-axis';
+    let yLabel = 'Y-axis';
+    let color = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["a" /* colorPalette */])(19, 700);
+    let rotateXtick = Obj.rotateXtick ? Obj.rotateXtick : 0; // Rotating the X-ticks
+
+    let xMax, xMin, yMax, yMin;
+
+    let chart = function (selection) {
+
+        const svg = selection.append('svg').attr('height', height).attr('width', width).attr('id', 'multiline-chart').attr('class', 'multiline');
+        let svgH = parseInt(svg.style('height').substr(0, svg.style('height').length - 2));
+        let svgW = parseInt(svg.style('width').substr(0, svg.style('width').length - 2));
+
+        data = _.map(data, d => {
+            d.view = 1;return d;
+        });
+        // _.forEach(data, function(o, i) { colorObj[o.name] = color[i]; });
+
+        const plotH = svgH - margin.top - margin.bottom; // Calculating the actual width of the plot
+        const plotW = svgW - margin.left - margin.right; // Calculating the actual height of the plot
+        const plotStartx = margin.left; // X-coordinate of the start of the plot
+        const plotStarty = margin.top; // Y-coordinate of the start of the plot
+
+        xMax = _.max(_.map(data, o => {
+            return parseFloat(o['x']);
+        }));
+        yMax = _.max(_.map(data, o => {
+            return parseFloat(o['y']);
+        }));
+        xMin = _.min(_.map(data, o => {
+            return parseFloat(o['x']);
+        }));
+        yMin = _.min(_.map(data, o => {
+            return parseFloat(o['y']);
+        }));
+
+        /* ---------------  Defining X-axis ------------------- */
+        const xScale = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["b" /* scale */])({ domain: [xMin, xMax], range: [plotStartx, plotStartx + plotW], scaleType: 'linear' });
+        const xAxis = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["c" /* axis */])({ scale: xScale, orient: 'bottom' });
+        const xAxisElement = svg.append('g').attr('class', 'scatter x axis').attr('transform', `translate(0, ${plotStarty + plotH})`);
+
+        /* ---------------  Defining Y-axis ------------------- */
+        const yScale = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["b" /* scale */])({ domain: [yMin, yMax], range: [plotH + plotStarty, plotStarty], scaleType: 'linear' });
+        const yAxis = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["c" /* axis */])({ scale: yScale, ticks: 6, tickformat: 'thousands' });
+        const yAxisElement = svg.append('g').attr('class', 'scatter y axis').attr('transform', `translate( ${margin.left} , 0)`);
+
+        let duration = 1000;
+        const plotCanvas = svg.append('g').attr('id', 'scatter-plotCanvas');
+
+        const draw = function () {
+            svg.select('.multiline.x.axis').call(xAxis);
+            svg.select('.multiline.y.axis').call(yAxis);
+
+            svg.selectAll('.axislabel').remove();
+            /* -- Adding X-axis label ----------------------------------------------- */
+            if (xLabel) {
+                __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["d" /* axislabel */])({
+                    selector: '.scatter.x.axis',
+                    orient: 'bottom',
+                    fontweight: 'regular',
+                    size: '1em',
+                    distance: labelDistance,
+                    text: xLabel,
+                    margin: margin
+                });
+            }
+
+            /* -- Adding Y-axis label ----------------------------------------------- */
+            if (yLabel) {
+                __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["d" /* axislabel */])({
+                    selector: '.scatter.y.axis',
+                    orient: 'left',
+                    fontweight: 'regular',
+                    size: '1em',
+                    distance: labelDistance,
+                    text: yLabel,
+                    margin: margin
+                });
+            }
+
+            plotCurrentData();
+        };
+
+        const plotCurrentData = function () {
+
+            let currentData = _.filter(data, o => {
+                return o.view == 1;
+            });
+
+            xMax = _.max(_.map(currentData, o => {
+                return parseFloat(o['x']);
+            }));
+            yMax = _.max(_.map(currentData, o => {
+                return parseFloat(o['y']);
+            }));
+            xMin = _.min(_.map(currentData, o => {
+                return parseFloat(o['x']);
+            }));
+            yMin = _.min(_.map(currentData, o => {
+                return parseFloat(o['y']);
+            }));
+            xScale.domain([xMin, xMax]);
+            yScale.domain([yMin, yMax]);
+            svg.select('.scatter.x.axis').call(xAxis);
+            svg.select('.scatter.y.axis').call(yAxis);
+
+            let scatterFigure = plotCanvas.selectAll(".scatter.dot").data(currentData);
+
+            scatterFigure.exit().remove();
+
+            scatterFigure.enter().append("circle").attr("class", "scatter dot").attr("fill", color[0]).attr("r", 6).attr("cx", function (d) {
+                return xScale(d.x);
+            }).attr("cy", function (d) {
+                return yScale(d.y);
+            });
+
+            scatterFigure.transition().duration(750).attr("fill", color[0]).attr("r", 6).attr("cx", function (d) {
+                return xScale(d.x);
+            }).attr("cy", function (d) {
+                return yScale(d.y);
+            });
+        };
+
+        const updateData = function () {
+            xMax = _.max(_.map(data, o => {
+                return parseFloat(o['x']);
+            }));
+            yMax = _.max(_.map(data, o => {
+                return parseFloat(o['y']);
+            }));
+            xMin = _.min(_.map(data, o => {
+                return parseFloat(o['x']);
+            }));
+            yMin = _.min(_.map(data, o => {
+                return parseFloat(o['y']);
+            }));
+            xScale.domain([xMin, xMax]);
+            yScale.domain([yMin, yMax]);
+
+            data = _.map(data, d => {
+                d.view = 1;return d;
+            });
+            draw();
+        };
+
+        const updateResize = function () {
+            duration = 0;
+            svgH = parseInt(svg.style('height').substr(0, svg.style('height').length - 2));
+            svgW = parseInt(svg.style('width').substr(0, svg.style('width').length - 2));
+
+            plotH = svgH - margin.top - margin.bottom; // Calculating the actual width of the plot
+            plotW = svgW - margin.left - margin.right; // Calculating the actual height of the plot
+
+            xScale.range([plotStartx, plotStartx + plotW]);
+            yScale.range([plotH + plotStarty, plotStarty]);
+
+            yAxisElement.attr('transform', 'translate(' + margin.left + ', 0)');
+            xAxisElement.attr('transform', 'translate(0,' + (plotStarty + plotH) + ')');
+
+            draw();
+        };
+    };
+
+    chart.data = function (_) {
+        if (!arguments.length) return data;
+        data = _;
+        if (typeof updateData === 'function') updateData();
+        return chart;
+    };
+
+    chart.height = function (_) {
+        if (!arguments.length) return height;
+        height = _;
+        return chart;
+    };
+
+    chart.width = function (_) {
+        if (!arguments.length) return width;
+        width = _;
+        return chart;
+    };
+
+    chart.x = function (_) {
+        if (!arguments.length) return x;
+        x = _;
+        return chart;
+    };
+
+    chart.y = function (_) {
+        if (!arguments.length) return y;
+        y = _;
+        return chart;
+    };
+
+    chart.margin = function (_) {
+        if (!arguments.length) return margin;
+        margin = _;
+        return chart;
+    };
+
+    chart.xLabel = function (_) {
+        if (!arguments.length) return xLabel;
+        xLabel = _;
+        return chart;
+    };
+
+    chart.yLabel = function (_) {
+        if (!arguments.length) return yLabel;
+        yLabel = _;
+        return chart;
+    };
+
+    return chart;
+};
+
+
+
+/***/ }),
+/* 9 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -36647,17 +37234,16 @@ const stackChart = function () {
 
 
 /***/ }),
-/* 8 */
+/* 10 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__stackChart_js__ = __webpack_require__(7);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lineChart_js__ = __webpack_require__(5);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__pieChart_js__ = __webpack_require__(6);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__scatterChart_js__ = __webpack_require__(11);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__barChart_js__ = __webpack_require__(12);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__barChart_js___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4__barChart_js__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__stackChart_js__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__lineChart_js__ = __webpack_require__(6);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__pieChart_js__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__scatterChart_js__ = __webpack_require__(8);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__barChart_js__ = __webpack_require__(5);
 const _ = __webpack_require__(1);
 const d3 = __webpack_require__(0);
 
@@ -36668,9 +37254,10 @@ const d3 = __webpack_require__(0);
 
 
 /* Trial stack bar chart */
-d3.tsv('../data/bar_data.tsv', function (data) {
+d3.tsv('../data/bar_data_2.tsv', function (data) {
     const barchartRoot = d3.select('#bar-main');
-    const newBarChart = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__barChart_js__["barChart"])().data(data);
+    const newBarChart = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__barChart_js__["a" /* barChart */])().data(data).margin({ top: 40, bottom: 60, left: 80, right: 30 });
+    barchartRoot.call(newBarChart);
 });
 
 d3.tsv('../data/BT.tsv', function (data) {
@@ -36738,7 +37325,7 @@ d3.tsv("../data/pie_data.tsv", function (data) {
 });
 
 /***/ }),
-/* 9 */
+/* 11 */
 /***/ (function(module, exports) {
 
 var g;
@@ -36765,7 +37352,7 @@ module.exports = g;
 
 
 /***/ }),
-/* 10 */
+/* 12 */
 /***/ (function(module, exports) {
 
 module.exports = function(module) {
@@ -36791,285 +37378,6 @@ module.exports = function(module) {
 	return module;
 };
 
-
-/***/ }),
-/* 11 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* unused harmony export scatterChart */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__chartUtils_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_js__ = __webpack_require__(3);
-
-
-const d3 = __webpack_require__(0);
-const _ = __webpack_require__(1);
-
-
-
-/* -------------------  Convert data readable for the bar chart function  -----------------------*/
-const scatterDatum = function (data, xVector, yVector, level) {
-    let dataOut = [];
-
-    for (let d in _.range(data.length)) {
-        d = data[d];
-        let dataObj = {};
-        dataObj.x = parseFloat(d[xVector]).toFixed(2);
-        dataObj.y = parseFloat(d[yVector]).toFixed(2);
-        dataObj.key = d.Organism;
-        dataObj.colorKey = d[level];
-        dataOut.push(dataObj);
-    }
-
-    const scatterObj = {
-        data: dataOut,
-        xLabel: tipNames[xVector],
-        yLabel: tipNames[yVector],
-        svgid: "graph-svg",
-        margin: { top: 20, right: 10, bottom: 50, left: 70 }
-    };
-
-    return scatterObj;
-};
-
-/*-- 1. Data format
-     data type: list of objects
-     sub : Each object has a three (key, value pairs)
-        (i) The xValue  (x, value)
-        (ii) The yValue (y, value)
-        (iii) The name of the line (name, value) #optional
-        (iv)  Group value (group, value) #optional
-    --*/
-
-const scatterChart = function (Obj) {
-
-    /* Defining defaults for different plotting parameters. */
-
-    let data = [];
-    let margin = { top: 40, right: 20, bottom: 40, left: 40 };
-
-    let xLabel = 'X-axis';
-    let yLabel = 'Y-axis';
-    let color = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["a" /* colorPalette */])(19, 700);
-    let rotateXtick = Obj.rotateXtick ? Obj.rotateXtick : 0; // Rotating the X-ticks
-
-    let xMax, xMin, yMax, yMin;
-
-    let chart = function (selection) {
-
-        const svg = selection.append('svg').attr('height', height).attr('width', width).attr('id', 'multiline-chart').attr('class', 'multiline');
-        let svgH = parseInt(svg.style('height').substr(0, svg.style('height').length - 2));
-        let svgW = parseInt(svg.style('width').substr(0, svg.style('width').length - 2));
-
-        data = _.map(data, d => {
-            d.view = 1;return d;
-        });
-        // _.forEach(data, function(o, i) { colorObj[o.name] = color[i]; });
-
-        const plotH = svgH - margin.top - margin.bottom; // Calculating the actual width of the plot
-        const plotW = svgW - margin.left - margin.right; // Calculating the actual height of the plot
-        const plotStartx = margin.left; // X-coordinate of the start of the plot
-        const plotStarty = margin.top; // Y-coordinate of the start of the plot
-
-        xMax = _.max(_.map(data, o => {
-            return parseFloat(o['x']);
-        }));
-        yMax = _.max(_.map(data, o => {
-            return parseFloat(o['y']);
-        }));
-        xMin = _.min(_.map(data, o => {
-            return parseFloat(o['x']);
-        }));
-        yMin = _.min(_.map(data, o => {
-            return parseFloat(o['y']);
-        }));
-
-        /* ---------------  Defining X-axis ------------------- */
-        const xScale = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["b" /* scale */])({ domain: [xMin, xMax], range: [plotStartx, plotStartx + plotW], scaleType: 'linear' });
-        const xAxis = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["c" /* axis */])({ scale: xScale, orient: 'bottom' });
-        const xAxisElement = svg.append('g').attr('class', 'scatter x axis').attr('transform', `translate(0, ${plotStarty + plotH})`);
-
-        /* ---------------  Defining Y-axis ------------------- */
-        const yScale = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["b" /* scale */])({ domain: [yMin, yMax], range: [plotH + plotStarty, plotStarty], scaleType: 'linear' });
-        const yAxis = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["c" /* axis */])({ scale: yScale, ticks: 6, tickformat: 'thousands' });
-        const yAxisElement = svg.append('g').attr('class', 'scatter y axis').attr('transform', `translate( ${margin.left} , 0)`);
-
-        let duration = 1000;
-        const plotCanvas = svg.append('g').attr('id', 'scatter-plotCanvas');
-
-        const draw = function () {
-            svg.select('.multiline.x.axis').call(xAxis);
-            svg.select('.multiline.y.axis').call(yAxis);
-
-            svg.selectAll('.axislabel').remove();
-            /* -- Adding X-axis label ----------------------------------------------- */
-            if (xLabel) {
-                __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["d" /* axislabel */])({
-                    selector: '.scatter.x.axis',
-                    orient: 'bottom',
-                    fontweight: 'regular',
-                    size: '1em',
-                    distance: labelDistance,
-                    text: xLabel,
-                    margin: margin
-                });
-            }
-
-            /* -- Adding Y-axis label ----------------------------------------------- */
-            if (yLabel) {
-                __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["d" /* axislabel */])({
-                    selector: '.scatter.y.axis',
-                    orient: 'left',
-                    fontweight: 'regular',
-                    size: '1em',
-                    distance: labelDistance,
-                    text: yLabel,
-                    margin: margin
-                });
-            }
-
-            plotCurrentData();
-        };
-
-        const plotCurrentData = function () {
-
-            let currentData = _.filter(data, o => {
-                return o.view == 1;
-            });
-
-            xMax = _.max(_.map(currentData, o => {
-                return parseFloat(o['x']);
-            }));
-            yMax = _.max(_.map(currentData, o => {
-                return parseFloat(o['y']);
-            }));
-            xMin = _.min(_.map(currentData, o => {
-                return parseFloat(o['x']);
-            }));
-            yMin = _.min(_.map(currentData, o => {
-                return parseFloat(o['y']);
-            }));
-            xScale.domain([xMin, xMax]);
-            yScale.domain([yMin, yMax]);
-            svg.select('.scatter.x.axis').call(xAxis);
-            svg.select('.scatter.y.axis').call(yAxis);
-
-            let scatterFigure = plotCanvas.selectAll(".scatter.dot").data(currentData);
-
-            scatterFigure.exit().remove();
-
-            scatterFigure.enter().append("circle").attr("class", "scatter dot").attr("fill", color[0]).attr("r", 6).attr("cx", function (d) {
-                return xScale(d.x);
-            }).attr("cy", function (d) {
-                return yScale(d.y);
-            });
-
-            scatterFigure.transition().duration(750).attr("fill", color[0]).attr("r", 6).attr("cx", function (d) {
-                return xScale(d.x);
-            }).attr("cy", function (d) {
-                return yScale(d.y);
-            });
-        };
-
-        const updateData = function () {
-            xMax = _.max(_.map(data, o => {
-                return parseFloat(o['x']);
-            }));
-            yMax = _.max(_.map(data, o => {
-                return parseFloat(o['y']);
-            }));
-            xMin = _.min(_.map(data, o => {
-                return parseFloat(o['x']);
-            }));
-            yMin = _.min(_.map(data, o => {
-                return parseFloat(o['y']);
-            }));
-            xScale.domain([xMin, xMax]);
-            yScale.domain([yMin, yMax]);
-
-            data = _.map(data, d => {
-                d.view = 1;return d;
-            });
-            draw();
-        };
-
-        const updateResize = function () {
-            duration = 0;
-            svgH = parseInt(svg.style('height').substr(0, svg.style('height').length - 2));
-            svgW = parseInt(svg.style('width').substr(0, svg.style('width').length - 2));
-
-            plotH = svgH - margin.top - margin.bottom; // Calculating the actual width of the plot
-            plotW = svgW - margin.left - margin.right; // Calculating the actual height of the plot
-
-            xScale.range([plotStartx, plotStartx + plotW]);
-            yScale.range([plotH + plotStarty, plotStarty]);
-
-            yAxisElement.attr('transform', 'translate(' + margin.left + ', 0)');
-            xAxisElement.attr('transform', 'translate(0,' + (plotStarty + plotH) + ')');
-
-            draw();
-        };
-    };
-
-    chart.data = function (_) {
-        if (!arguments.length) return data;
-        data = _;
-        if (typeof updateData === 'function') updateData();
-        return chart;
-    };
-
-    chart.height = function (_) {
-        if (!arguments.length) return height;
-        height = _;
-        return chart;
-    };
-
-    chart.width = function (_) {
-        if (!arguments.length) return width;
-        width = _;
-        return chart;
-    };
-
-    chart.x = function (_) {
-        if (!arguments.length) return x;
-        x = _;
-        return chart;
-    };
-
-    chart.y = function (_) {
-        if (!arguments.length) return y;
-        y = _;
-        return chart;
-    };
-
-    chart.margin = function (_) {
-        if (!arguments.length) return margin;
-        margin = _;
-        return chart;
-    };
-
-    chart.xLabel = function (_) {
-        if (!arguments.length) return xLabel;
-        xLabel = _;
-        return chart;
-    };
-
-    chart.yLabel = function (_) {
-        if (!arguments.length) return yLabel;
-        yLabel = _;
-        return chart;
-    };
-
-    return chart;
-};
-
-
-
-/***/ }),
-/* 12 */
-/***/ (function(module, exports) {
-
-throw new Error("Module build failed: Duplicate declaration \"margin\"\n\n\u001b[0m \u001b[90m 23 | \u001b[39m    let xLabel\u001b[33m;\u001b[39m\n \u001b[90m 24 | \u001b[39m    let yLabel\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 25 | \u001b[39m    \u001b[36mconst\u001b[39m margin \u001b[33m=\u001b[39m { top\u001b[33m:\u001b[39m \u001b[35m40\u001b[39m\u001b[33m,\u001b[39m right\u001b[33m:\u001b[39m \u001b[35m20\u001b[39m\u001b[33m,\u001b[39m bottom\u001b[33m:\u001b[39m \u001b[35m40\u001b[39m\u001b[33m,\u001b[39m left\u001b[33m:\u001b[39m \u001b[35m40\u001b[39m }\u001b[33m;\u001b[39m\n \u001b[90m    | \u001b[39m          \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 26 | \u001b[39m\n \u001b[90m 27 | \u001b[39m    let chart \u001b[33m=\u001b[39m \u001b[36mfunction\u001b[39m(selection) {\n \u001b[90m 28 | \u001b[39m\u001b[0m\n");
 
 /***/ })
 /******/ ]);
