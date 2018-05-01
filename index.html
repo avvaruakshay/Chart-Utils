@@ -9,45 +9,33 @@
 </head>
 
 <body>
-    <center>
-        <h3>Chart utils</h3>
-    </center>
-
-    <center>
-        <div id="main">
-            <div class="tabs">
-
-                <input type="radio" name="tab-group" id="bar" checked aria-hidden="true">
-                <label for="bar" aria-hidden="true">Bar Chart</label>
-                <div class="plot-tab" id="bar-main"></div>
-
-                <input type="radio" name="tab-group" id="scatter" aria-hidden="true">
-                <label for="scatter" aria-hidden="true">Scatter Plot</label>
-                <div class="plot-tab" id="scatter-main"></div>
-
-                <input type="radio" name="tab-group" id="line" aria-hidden="true">
-                <label for="line" aria-hidden="true">Line Plot</label>
-                <div class="plot-tab" id="line-main"></div>
-
-                <input type="radio" name="tab-group" id="pie" aria-hidden="true">
-                <label for="pie" aria-hidden="true">Pie Chart</label>
-                <div class="plot-tab" id="pie-main"></div>
-
-                <input type="radio" name="tab-group" id="stacked" aria-hidden="true">
-                <label for="stacked" aria-hidden="true">Stacked Bar</label>
-                <div class="plot-tab" id="stacked-main"></div>
-
-                <input type="radio" name="tab-group" id="box" aria-hidden="true">
-                <label for="box" aria-hidden="true">Box Plot</label>
-                <div class="plot-tab" id="box-main"></div>
-
-                <input type="radio" name="tab-group" id="hist" aria-hidden="true">
-                <label for="hist" aria-hidden="true">Histogram</label>
-                <div class="plot-tab" id="hist-main"></div>
-
+    <div class="hero">
+        <div class="hero-body">
+            <div class="container">
+                <h1 class="title">Chart Utils</h1>
+                <h2 class="subtitle">Awesome JS charting library</h2>
             </div>
         </div>
-    </center>
+    </div>
+
+    <div class="columns" style="background: white; padding: 20px">
+        <div class="column container is-one-thirds">
+                <div class="tabs is-toggle is-right" style>
+                    <ul>
+                        <li class="is-active tab" id="bar"><a>Bar</a></li>
+                        <li class="tab" id="scatter"><a>Scatter</a></li>
+                        <li class="tab" id="line"><a>Line</a></li>
+                        <li class="tab" id="pie"><a>Pie</a></li>
+                        <li class="tab" id="box"><a>Box</a></li>
+                        <li class="tab" id="histogram"><a>Histogram</a></li>
+                    </ul>
+                </div>
+                <center class="container" style="height: 80vh; border-radius: 10px" id="chart-area"></center>
+        </div>
+        <div class="column is-two-thirds">
+            <div class="subtitle">Control header</div>
+        </div>
+    </div>
 
     <script src="./dist/bundle.js"></script>
 

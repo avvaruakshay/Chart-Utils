@@ -1,6 +1,9 @@
 const _ = require("lodash")
 const d3 = require("d3")
 
+//styles
+import '../node_modules/bulma/css/bulma.min.css'
+
 import { stackData, stackChart } from './stackChart.js'
 import { lineDatum, multilineChart } from './lineChart.js'
 import { pieDatum, pieChart } from './pieChart.js'
@@ -8,69 +11,98 @@ import { scatterChart } from './scatterChart.js'
 import { barChart } from './barChart.js'
 import { getUniqueElements, getMatchingRows } from './utils.js'
 
-/* Trial stack bar chart */
-d3.tsv('../data/bar_data_2.tsv', function(data) {
-    const barchartRoot = d3.select('#bar-main');
-    const newBarChart = barChart()
-                        .data(data)
-                        .margin({ top: 40, bottom: 60, left: 80, right: 30 })
-                        .xLabel('Repeats')
-                        .yLabel('Abundance');
-    
-    barchartRoot.call(newBarChart);
-});
-                    
-d3.tsv('../data/scatter_data.tsv', function(data){
-    const scatterChartRoot = d3.select('#scatter-main');
-    const newScatterChart = scatterChart()
-                            .margin({top: 40, left: 80, right: 40, bottom: 80})
-                            .data(data);
-    
-    scatterChartRoot.call(newScatterChart);
+
+const plotChart = function(chartType){
+    const chartRoot = d3.select('#chart-area');
+    let chartFunc;
+
+    if (chartType === "bar") {
+        d3.tsv('../data/bar_data_2.tsv', function(data) {
+            const newBarChart = barChart()
+                                .data(data)
+                                .margin({ top: 40, bottom: 60, left: 80, right: 30 })
+                                .xLabel('Repeats')
+                                .yLabel('Abundance');
+            chartRoot.call(newBarChart);
+        });
+    }
+    else if (chartType === "scatter")  {
+        d3.tsv('../data/scatter_data.tsv', function(data){
+            const newScatterChart = scatterChart()
+                                    .margin({top: 40, left: 80, right: 40, bottom: 80})
+                                    .data(data);
+            
+            chartRoot.call(newScatterChart);
+        })
+    }
+    else if (chartType === "scatter")  {
+        d3.tsv('../data/BT.tsv', function(data) {
+            let names = _.map(_.uniqBy(data, 'repClass'), o => { return o.repClass; });
+            let units = (_.map(_.uniqBy(data, 'units'), o => { return parseInt(o.units); })).sort();
+            data = _.map(names, o => { let values = _.map(_.filter(data, { repClass: o }), p => { return { x: parseInt(p.units), y: parseInt(p.freq) } }); return { name: o, values: values } });
+            data = _.map(data, o => {
+                let values = o.values;
+                values = _.filter(values, d => { return d.x <= 50 && d.x >= 2; });
+                o.values = values;
+                return o;
+            })
+            let newLineChart = multilineChart().data(data)
+                                .margin({ top: 20, right: 20, bottom: 60, left: 80 })
+                                .xLabel('Repeat units')
+                                .yLabel('Frequency');
+            chartRoot.call(newLineChart);
+    })
+    }
+    else if (chartType === 'pie')  {
+        d3.tsv("../data/pie_data.tsv", function(data) {
+            const newPieChart = pieChart().data(data).piePosition('center');
+            chartRoot.call(newPieChart);
+        })
+    }
+}
+
+d3.selectAll('.tab').on('click', function(){
+    d3.select('.tab.is-active').attr('class', 'tab');
+    this.classList.add('is-active');
+    let chartType = this.id;
+    d3.select('svg').remove();
+    plotChart(chartType);
 })
 
-/* Trial Pie chart */
-d3.tsv("../data/pie_data.tsv", function(data) {
-    const pieRoot = d3.select('#pie-main');
-    const newPieChart = pieChart().data(data).piePosition('center');
-    pieRoot.call(newPieChart);
-})
-/* Trial line chart */
-// d3.tsv('../data/repHFR.tsv', function(data) {
+document.getElementById('scatter').click();
 
-//     let repeats = _.uniq(_.map(data, 'repeat'));
-//     let names = _.uniq(_.map(data, 'name'));
-//     let xValues = _.range(1, 302);
-//     let xLabels = _.range(-150, 151);
 
-//     let plotdata = {};
-//     for (let r in repeats) {
-//         let rep = repeats[r];
-//         let repData = _.filter(data, ['repeat', rep]);
-//         console.log(rep);
-//         plotdata[rep] = [];
-//         for (let n in names) {
-//             n = names[n];
-//             let obj = { name: n, values: [] }
-//             for (let x in xValues) {
-//                 let win = xValues[x];
-//                 let y = _.filter(repData, ['name', n])[0]['win_' + win]
-//                 obj.values.push({ 'x': xLabels[x], 'y': parseFloat(y) })
-//             }
-//             plotdata[rep].push(obj);
-//         }
-//     }
-//     let lineRoot = d3.select('#line-main');
-//     let newLineChart = multilineChart().data(plotdata[repeats[0]]).margin({ top: 20, right: 20, bottom: 60, left: 80 }).xLabel('Window number').yLabel('Coverage');
-//     lineRoot.call(newLineChart);
 
-//     dropdown.on('change', function() {
-//         lineRoot.select('svg').remove();
-//         newLineChart = multilineChart().data(plotdata[this.value]).margin({ top: 20, right: 20, bottom: 60, left: 80 }).yLabel('Coverage').xLabel('Window number');
-//         lineRoot.call(newLineChart);
-//     })
 
-// })
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // d3.tsv('../data/BT.tsv', function(data) {
 

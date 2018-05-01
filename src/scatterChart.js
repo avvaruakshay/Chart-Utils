@@ -47,8 +47,8 @@ const scatterChart = function(Obj) {
 
     // Customizable chart properties
     let data = [];
-    let width = '80vw';
-    let height = '80vh';
+    let width = '95%';
+    let height = '95%';
     let margin = { top: 20, right: 20, bottom: 40, left: 40 };
 
     let color = colorPalette(19, 700);
@@ -62,8 +62,12 @@ const scatterChart = function(Obj) {
 
     let chart = function(selection) {
 
+        let mainDiv = document.getElementById(selection.attr('id'));
+        let mainDivX = mainDiv.getBoundingClientRect().x;
+        let mainDivY = mainDiv.getBoundingClientRect().y;
+
         const svg = selection.append('svg').attr('height', height).attr('width', width).attr('id', 'scatter-chart').attr('class', 'scatter');
-        const toolTipdiv = selection.append('div').attr('class', 'tooltip'); //.style('position', 'absolute');
+        const toolTipdiv = selection.append('div').attr('class', 'scattertip').style('position', 'absolute');
         let svgH = parseInt(svg.style('height').substr(0, svg.style('height').length - 2));
         let svgW = parseInt(svg.style('width').substr(0, svg.style('width').length - 2));
 
@@ -92,7 +96,7 @@ const scatterChart = function(Obj) {
         const yScale = scale({ 
             domain: [yMin, yMax], 
             range: [plotH + plotStarty, plotStarty], 
-            scaleType: 'linear', });
+            scaleType: 'linear' });
         const yAxis = axis({ scale: yScale, ticks: 6, tickformat: 'thousands' });
         const yAxisElement = svg.append('g').attr('class', 'scatter y axis').attr('transform', `translate( ${margin.left} , 0)`);
 
@@ -155,20 +159,29 @@ const scatterChart = function(Obj) {
                 .append("circle")
                 .attr("class", "scatter dot")
                 .attr("fill", color[0])
-                .attr("r", 6)
+                .attr("r", 4)
                 .attr("cx", function(d) { return xScale(d.x); })
                 .attr("cy", function(d) { return yScale(d.y); })
-                .on('mouseover', function(){
+                .on('mouseover', function(d){
                     console.log('Mouse hovered!');
-                    toolTipdiv.select('*').remove();
-                    toolTipdiv.append('div').html('Added just now');
-
                     let mouseX = event.clientX;
                     let mouseY = event.clientY;
+                    toolTipdiv.style('display', 'inline')
+                              .style('left', `${mouseX - mainDivX + 10}px`)
+                              .style('top', `${mouseY - mainDivY - 80}px`)
+                              .style('background', 'rgb(104, 104, 104, 0.4)')
+                              .style('padding', '10px')
+                              .style('border-radius', '10px');
+                            //   .attr('transform', `translate(${mouseX}px, ${mouseY}px)`)
+                    toolTipdiv.append('div').html(`<span><b>${d.name}</b></span><br><span>${xLabel}: ${d.x}</span><br><span>${yLabel}: ${d.y}</span>`);
 
-                    // toolTipdiv.attr('transform', `translate(${mouseX}, ${mouseY})`);
+                })
+                .on('mousemover', function(){
+                    toolTipdiv.style('left', `${mouseX}px`)
+                              .style('top', `${mouseY}px`);
                 })
                 .on('mouseout', function(){
+                    toolTipdiv.style('display', 'none');
                     toolTipdiv.select('*').remove();
                 });
 
@@ -196,6 +209,8 @@ const scatterChart = function(Obj) {
             duration = 0;
             svgH = parseInt(svg.style('height').substr(0, svg.style('height').length - 2));
             svgW = parseInt(svg.style('width').substr(0, svg.style('width').length - 2));
+            mainDivX = mainDiv.getBoundingClientRect().x;
+            mainDivY = mainDiv.getBoundingClientRect().y;
 
             plotH = svgH - margin.top - margin.bottom; // Calculating the actual width of the plot
             plotW = svgW - margin.left - margin.right; // Calculating the actual height of the plot

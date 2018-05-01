@@ -11,19 +11,28 @@ module.exports = {
     module: {
         rules: [{
             test: /\.js$/,
-            use: 'babel-loader',
-            exclude: /node_modules/
-        },
-        {
-            test: /\.js$/,
             use: ['babel-loader'],
             exclude: /node_modules/
         },
         {
-            test: /\.css$/,
-            use: ['style-loader', 'css-loader', 'postcss-loader']
+          test: /\.(sass|scss)$/,
+          use: ['sass-loader', 'node-sass']
         },
-    ]
+        {
+            test: /.(ttf|otf|eot|svg|woff(2)?)(\?[a-z0-9]+)?$/,
+            use: [{
+              loader: 'file-loader',
+              options: {
+                name: '[name].[ext]',
+                outputPath: 'fonts/',    // where the fonts will go
+                publicPath: '../'       // override the default path
+              }
+            }]
+        },
+        {
+            test: /\.css$/,
+            use: ['style-loader', 'css-loader']
+        }]
     },
 
     output: {
@@ -31,11 +40,4 @@ module.exports = {
         filename: 'bundle.js'
     },
     watch: true
-    // devServer: {
-    //     hot: true, // Tell th dev-server we're using HMR
-    //     contentBase: path.resolve(__dirname, './'),
-    //     watchOptions: {
-    //         ignored: /node_modules/
-    //     }
-    // }
 };

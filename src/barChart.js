@@ -17,8 +17,8 @@ const barChart = function() {
 
     // Customizable chart properties
     let data = [];
-    let width = '80vw';
-    let height = '80vh';
+    let width = '95%';
+    let height = '95%';
     let margin = { top: 20, right: 20, bottom: 40, left: 40 };
 
     let color = {};
@@ -45,6 +45,7 @@ const barChart = function() {
             for (let i in groups) { color[groups[i]] = colors[i]; }
         }
         data = _.map(data, d => { d.view = 1; return d; })
+        console.log(data);
 
         let yMax = _.max(_.map(data, d => { return d.value }));
         let yMin = _.min(_.map(data, d => { return d.value }));
