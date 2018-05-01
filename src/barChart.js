@@ -4,7 +4,7 @@ const d3 = require('d3');
 const _ = require('lodash');
 import { scale, axis, axislabel, rotateXticks, colorPalette } from "./chartUtils.js"
 import { getUniqueElements } from "./utils.js"
-import { tooltip } from "./tooltip.js"
+// import { tooltip } from "./tooltip.js"
 
 /*-- 1. Data format
      data type: list of objects
@@ -25,7 +25,8 @@ const barChart = function() {
     let xLabel = "X-axis";
     let yLabel = "Y-axis";
     let windowResize = true;
-    let labelDistance = 20;
+    let xlabelDistance = 20;
+    let ylabelDistance = 20;
 
     let chart = function(selection) {
 
@@ -33,6 +34,8 @@ const barChart = function() {
         let svgH = parseInt(svg.style('height').substr(0, svg.style('height').length - 2));
         let svgW = parseInt(svg.style('width').substr(0, svg.style('width').length - 2));
 
+        //Handles the grouping and creates color object accordingly.
+        //If groups are specified colors are 
         let groups = _.uniq(_.map(data, 'group'));
         if (groups.length == 0) {
             data = _.map(data, d => { d.group = 'default'; return d; });
@@ -108,7 +111,7 @@ const barChart = function() {
                     orient: 'bottom',
                     fontweight: 'regular',
                     size: '1em',
-                    distance: labelDistance,
+                    distance: xlabelDistance,
                     text: xLabel,
                     margin: margin
                 });
@@ -121,7 +124,7 @@ const barChart = function() {
                     orient: 'left',
                     fontweight: 'regular',
                     size: '1em',
-                    distance: labelDistance,
+                    distance: ylabelDistance,
                     text: yLabel,
                     margin: margin
                 });
@@ -232,6 +235,18 @@ const barChart = function() {
     chart.xLabel = function(_) {
         if (!arguments.length) return xLabel;
         xLabel = _;
+        return chart;
+    }
+
+    chart.xlabelDistance = function(_) {
+        if (!arguments.length) return xlabelDistance;
+        xlabelDistance = _;
+        return chart;
+    }
+    
+    chart.ylabelDistance = function(_) {
+        if (!arguments.length) return ylabelDistance;
+        ylabelDistance = _;
         return chart;
     }
 

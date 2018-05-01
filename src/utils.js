@@ -145,4 +145,4 @@ const setCurrentPalette = function(data, val, level) {
     return [barPalette, scatterPalette];
 }
 
-export { getTranslateValue }
+export { getTranslateValue, getUniqueElements, getMatchingRows }

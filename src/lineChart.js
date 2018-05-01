@@ -178,7 +178,7 @@ const multilineChart = function() {
                     .style("font-size", "0.8em")
                     .style("text-anchor", "end")
                     .attr("dy", "0.35em")
-                    .text("Repeat length");
+                    .text("Repeat Units"); //("Repeat length");
 
                 // Focus x-axis text
                 focus.append("g")
@@ -213,7 +213,7 @@ const multilineChart = function() {
                     .style("font-size", "0.8em")
                     .attr("dy", "0.35em")
                     .attr("y", yHoverTextStart - 20)
-                    .text("Frequency");
+                    .text("Frequency"); //("Frequency");
 
                 const mousemove = function() {
                     let hoverX = Math.round(xScale.invert(plotStartx + d3.mouse(this)[0]));
@@ -226,7 +226,7 @@ const multilineChart = function() {
                     // Handling the text for showing x-coordinate
                     focus.select(".focus.xtext").select("text")
                         .attr("x", function() { let out = (toolTipDist <= 10) ? xScale(hoverX) - toolTipDist : xScale(hoverX) - 10; return out; })
-                        .text(hoverX + "bp");
+                        .text(hoverX + "");
                     focus.select(".focus.xhead").select("text")
                         .attr("x", function() { let out = (toolTipDist <= 10) ? xScale(hoverX) - toolTipDist : xScale(hoverX) - 10; return out; });
 
@@ -253,7 +253,7 @@ const multilineChart = function() {
                         .text(function(d, i) {
                             const xIndex = _.findIndex(d['values'], function(o) { return o[x] == hoverX; });
                             const Val = (xIndex != -1) ? d['values'][xIndex][y] : 0;
-                            if (hoverX >= 12) { return `${ d['name'] }:  ${ Val }`; }
+                            if (hoverX >= -3000) { return `${ d['name'] }:  ${ Val }`; }
 
                         })
 
@@ -316,6 +316,7 @@ const multilineChart = function() {
         }
 
         const updateData = function() {
+            console.log('Data  changed!')
             duration = 1000;
             xMax = _.max(_.map(_.flatten(_.map(data, o => { return o['values'] })), o => { return o.x; })); // Max value of the x-axis
             yMax = _.max(_.map(_.flatten(_.map(data, o => { return o['values'] })), o => { return o.y; })); // Max value of the y-axis

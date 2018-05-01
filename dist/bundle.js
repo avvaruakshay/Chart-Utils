@@ -59,7 +59,7 @@
 /******/ 	
 /******/ 	
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "34b574d2c7f48e0fa2b1"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "cc5aefc964c0b422a91b"; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentParents = []; // eslint-disable-line no-unused-vars
@@ -34678,12 +34678,190 @@ Object.defineProperty(exports, '__esModule', { value: true });
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return getTranslateValue; });
+/* unused harmony export getUniqueElements */
+/* unused harmony export getMatchingRows */
+
+
+// let colorPalette = ["#3366cc", "#dc3912", "#ff9900", "#109618", "#0099c6", "#dd4477", "#66aa00", "#b82e2e"].concat(colorbrewer.Paired[12]);
+
+let colorPalette = ["#3366cc", "#dc3912", "#ff9900", "#109618", "#0099c6", "#dd4477", "#66aa00", "#b82e2e", "#316395", "#994499", "#22aa99", "#aaaa11", "#6633cc", "#e67300", "#8b0707", "#651067", "#329262", "#5574a6", "#3b3eac", "#990099"];
+let baseColor = colorPalette[4];
+const _ = __webpack_require__(1);
+
+const getParent = function (level) {
+    let parent;
+    if (level == 'Kingdom' || level == 'Group') {
+        parent = 'Kingdom';
+    } else if (level == 'SubGroup') {
+        parent = 'Group';
+    } else if (level == 'Organism') {
+        parent = 'SubGroup';
+    }
+    return parent;
+};
+
+const getSubLevel = function (level) {
+    let sublevel;
+    if (level == 'GOD') {
+        sublevel = 'Kingdom';
+    } else if (level == 'Kingdom') {
+        sublevel = 'Group';
+    } else if (level == 'Group') {
+        sublevel = 'SubGroup';
+    } else if (level == 'SubGroup') {
+        sublevel = 'Organism';
+    }
+    return sublevel;
+};
+
+/*-- Defining Custom Errors ---------------------------------------*/
+const UnImplementedError = function (name = "ImplementationError", message = "") {
+    // Error.apply(this, arguments);
+    this.name = name;
+    this.message = message;
+};
+UnImplementedError.prototype = Object.create(Error.prototype);
+
+/*-- Getting Translate vector parameters from the TranslateString ------------*/
+const getTranslateValue = function (translateString) {
+
+    const x1 = translateString.indexOf("(");
+    const x2 = translateString.indexOf(",");
+    const resx = parseInt(translateString.slice(x1 + 1, x2));
+
+    const y1 = translateString.indexOf(",");
+    const y2 = translateString.indexOf(")");
+
+    const resy = parseInt(translateString.slice(y1 + 1, y2));
+
+    return [resx, resy];
+};
+
+/*-- Getting Maximum Limit for axis ------------------------------------------*/
+const get_maxcod = function (ymax) {
+
+    if (ymax < 10) {
+        ymax = Math.ceil(ymax);
+    } else if (ymax <= 100) {
+        ymax = Math.ceil(ymax / 10) * 10 + 30;
+    } else if (ymax <= 1000) {
+        ymax = Math.ceil(ymax / 100) * 100 + 100;
+    } else if (ymax <= 10000) {
+        ymax = Math.ceil(ymax / 100) * 100 + 500;
+    } else if (ymax <= 100000) {
+        ymax = Math.ceil(ymax / 1000) * 1000 + 1000;
+    } else if (100000 < ymax) {
+        ymax = Math.ceil(ymax / 10000) * 10000 + 5000;
+    }
+    return ymax;
+};
+
+/*-- Getting Unique Elements of a column -------------------------------------*/
+const getUniqueElements = function (data, level) {
+    return _.chain(data).pluck(level).unique().compact().value();
+};
+
+/*-- Getting Matching Rows based on a Column Value ---------------------------*/
+const getMatchingRows = function (data, level, target) {
+    var matching_data = _.map(data, function (d) {
+        if (d[level] == target) {
+            return d;
+        }
+    });
+    return matching_data.filter(Boolean);
+};
+
+/*-- Get the matching column -------------------------------------------------*/
+const getMatchingColumn = function (data, column) {
+    var matcing_data = _.map(data, function (d) {
+        return d[column];
+    });
+
+    return matcing_data;
+};
+
+/* -- Sort data by Column --------------------------------------------------- */
+const sortByColumn = function (data, column, reverse) {
+    const result = reverse ? _.sortBy(data, function (d) {
+        return d.column;
+    }) : _.sortBy(data, function (d) {
+        return d.column;
+    }).reverse();
+};
+
+/*-- Populating Data Table ---------------------------------------------------*/
+const populateDataTable = function (data) {
+
+    dataTable.destroy();
+
+    d3.select('#data-table').select('tbody').selectAll('tr').remove();
+
+    const columns = ['Organism', 'Kingdom', 'Group', 'SubGroup', 'Size(Mb)', 'GC%', 'Genes', 'Proteins'];
+    const dataRow = d3.select('#data-table').select('tbody').selectAll('tr').data(data).enter().append('tr');
+
+    for (let c in columns) {
+        let column = columns[c];
+        dataRow.append('td').append('text').text(function (d) {
+            return d[column];
+        });
+    }
+
+    dataTable = $('#data-table').DataTable();
+};
+
+/* -- Creating Color based on Data ------------------------------------------ */
+const setCurrentPalette = function (data, val, level) {
+    let barPalette = {};
+    let scatterPalette = {};
+    const levelElements = getUniqueElements(data, level);
+    const parentElements = getUniqueElements(data, getParent(level));
+    if (level === 'Kingdom') {
+        labels = levelElements;
+        for (let c in labels) {
+            let label = labels[c];
+            barPalette[label] = baseColor;
+            scatterPalette[label] = colorPalette[c % colorPalette.length];
+        }
+    } else {
+        if (parentElements.length === 1) {
+            labels = levelElements;
+            for (let a in labels) {
+                let label = labels[a];
+                barPalette[label] = baseColor;
+                scatterPalette[label] = colorPalette[a % colorPalette.length];
+            }
+        } else {
+            labels = parentElements;
+            for (let b in labels) {
+                let label = labels[b];
+                const subElements = getUniqueElements(getMatchingRows(data, getParent(level), label), level);
+                for (let c in subElements) {
+                    c = subElements[c];
+                    scatterPalette[c] = colorPalette[b % colorPalette.length];
+                    barPalette[c] = colorPalette[b % colorPalette.length];
+                }
+            }
+        }
+    }
+
+    // console.log(barPalette, scatterPalette);
+    return [barPalette, scatterPalette];
+};
+
+
+
+/***/ }),
+/* 3 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return scale; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "c", function() { return axis; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "d", function() { return axislabel; });
 /* unused harmony export rotateXticks */
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return colorPalette; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__utils_js__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__utils_js__ = __webpack_require__(2);
 
 
 const d3 = __webpack_require__(0);
@@ -35160,182 +35338,6 @@ const zoombehavior = function (Obj) {};
 
 
 /***/ }),
-/* 3 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return getTranslateValue; });
-
-
-// let colorPalette = ["#3366cc", "#dc3912", "#ff9900", "#109618", "#0099c6", "#dd4477", "#66aa00", "#b82e2e"].concat(colorbrewer.Paired[12]);
-
-let colorPalette = ["#3366cc", "#dc3912", "#ff9900", "#109618", "#0099c6", "#dd4477", "#66aa00", "#b82e2e", "#316395", "#994499", "#22aa99", "#aaaa11", "#6633cc", "#e67300", "#8b0707", "#651067", "#329262", "#5574a6", "#3b3eac", "#990099"];
-let baseColor = colorPalette[4];
-const _ = __webpack_require__(1);
-
-const getParent = function (level) {
-    let parent;
-    if (level == 'Kingdom' || level == 'Group') {
-        parent = 'Kingdom';
-    } else if (level == 'SubGroup') {
-        parent = 'Group';
-    } else if (level == 'Organism') {
-        parent = 'SubGroup';
-    }
-    return parent;
-};
-
-const getSubLevel = function (level) {
-    let sublevel;
-    if (level == 'GOD') {
-        sublevel = 'Kingdom';
-    } else if (level == 'Kingdom') {
-        sublevel = 'Group';
-    } else if (level == 'Group') {
-        sublevel = 'SubGroup';
-    } else if (level == 'SubGroup') {
-        sublevel = 'Organism';
-    }
-    return sublevel;
-};
-
-/*-- Defining Custom Errors ---------------------------------------*/
-const UnImplementedError = function (name = "ImplementationError", message = "") {
-    // Error.apply(this, arguments);
-    this.name = name;
-    this.message = message;
-};
-UnImplementedError.prototype = Object.create(Error.prototype);
-
-/*-- Getting Translate vector parameters from the TranslateString ------------*/
-const getTranslateValue = function (translateString) {
-
-    const x1 = translateString.indexOf("(");
-    const x2 = translateString.indexOf(",");
-    const resx = parseInt(translateString.slice(x1 + 1, x2));
-
-    const y1 = translateString.indexOf(",");
-    const y2 = translateString.indexOf(")");
-
-    const resy = parseInt(translateString.slice(y1 + 1, y2));
-
-    return [resx, resy];
-};
-
-/*-- Getting Maximum Limit for axis ------------------------------------------*/
-const get_maxcod = function (ymax) {
-
-    if (ymax < 10) {
-        ymax = Math.ceil(ymax);
-    } else if (ymax <= 100) {
-        ymax = Math.ceil(ymax / 10) * 10 + 30;
-    } else if (ymax <= 1000) {
-        ymax = Math.ceil(ymax / 100) * 100 + 100;
-    } else if (ymax <= 10000) {
-        ymax = Math.ceil(ymax / 100) * 100 + 500;
-    } else if (ymax <= 100000) {
-        ymax = Math.ceil(ymax / 1000) * 1000 + 1000;
-    } else if (100000 < ymax) {
-        ymax = Math.ceil(ymax / 10000) * 10000 + 5000;
-    }
-    return ymax;
-};
-
-/*-- Getting Unique Elements of a column -------------------------------------*/
-const getUniqueElements = function (data, level) {
-    return _.chain(data).pluck(level).unique().compact().value();
-};
-
-/*-- Getting Matching Rows based on a Column Value ---------------------------*/
-const getMatchingRows = function (data, level, target) {
-    var matching_data = _.map(data, function (d) {
-        if (d[level] == target) {
-            return d;
-        }
-    });
-    return matching_data.filter(Boolean);
-};
-
-/*-- Get the matching column -------------------------------------------------*/
-const getMatchingColumn = function (data, column) {
-    var matcing_data = _.map(data, function (d) {
-        return d[column];
-    });
-
-    return matcing_data;
-};
-
-/* -- Sort data by Column --------------------------------------------------- */
-const sortByColumn = function (data, column, reverse) {
-    const result = reverse ? _.sortBy(data, function (d) {
-        return d.column;
-    }) : _.sortBy(data, function (d) {
-        return d.column;
-    }).reverse();
-};
-
-/*-- Populating Data Table ---------------------------------------------------*/
-const populateDataTable = function (data) {
-
-    dataTable.destroy();
-
-    d3.select('#data-table').select('tbody').selectAll('tr').remove();
-
-    const columns = ['Organism', 'Kingdom', 'Group', 'SubGroup', 'Size(Mb)', 'GC%', 'Genes', 'Proteins'];
-    const dataRow = d3.select('#data-table').select('tbody').selectAll('tr').data(data).enter().append('tr');
-
-    for (let c in columns) {
-        let column = columns[c];
-        dataRow.append('td').append('text').text(function (d) {
-            return d[column];
-        });
-    }
-
-    dataTable = $('#data-table').DataTable();
-};
-
-/* -- Creating Color based on Data ------------------------------------------ */
-const setCurrentPalette = function (data, val, level) {
-    let barPalette = {};
-    let scatterPalette = {};
-    const levelElements = getUniqueElements(data, level);
-    const parentElements = getUniqueElements(data, getParent(level));
-    if (level === 'Kingdom') {
-        labels = levelElements;
-        for (let c in labels) {
-            let label = labels[c];
-            barPalette[label] = baseColor;
-            scatterPalette[label] = colorPalette[c % colorPalette.length];
-        }
-    } else {
-        if (parentElements.length === 1) {
-            labels = levelElements;
-            for (let a in labels) {
-                let label = labels[a];
-                barPalette[label] = baseColor;
-                scatterPalette[label] = colorPalette[a % colorPalette.length];
-            }
-        } else {
-            labels = parentElements;
-            for (let b in labels) {
-                let label = labels[b];
-                const subElements = getUniqueElements(getMatchingRows(data, getParent(level), label), level);
-                for (let c in subElements) {
-                    c = subElements[c];
-                    scatterPalette[c] = colorPalette[b % colorPalette.length];
-                    barPalette[c] = colorPalette[b % colorPalette.length];
-                }
-            }
-        }
-    }
-
-    // console.log(barPalette, scatterPalette);
-    return [barPalette, scatterPalette];
-};
-
-
-
-/***/ }),
 /* 4 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
@@ -35511,16 +35513,15 @@ const tooltip = function () {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return barChart; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__chartUtils_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_js__ = __webpack_require__(3);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__tooltip_js__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__chartUtils_js__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_js__ = __webpack_require__(2);
 
 
 const d3 = __webpack_require__(0);
 const _ = __webpack_require__(1);
 
 
-
+// import { tooltip } from "./tooltip.js"
 
 /*-- 1. Data format
      data type: list of objects
@@ -35541,7 +35542,8 @@ const barChart = function () {
     let xLabel = "X-axis";
     let yLabel = "Y-axis";
     let windowResize = true;
-    let labelDistance = 20;
+    let xlabelDistance = 20;
+    let ylabelDistance = 20;
 
     let chart = function (selection) {
 
@@ -35549,6 +35551,8 @@ const barChart = function () {
         let svgH = parseInt(svg.style('height').substr(0, svg.style('height').length - 2));
         let svgW = parseInt(svg.style('width').substr(0, svg.style('width').length - 2));
 
+        //Handles the grouping and creates color object accordingly.
+        //If groups are specified colors are 
         let groups = _.uniq(_.map(data, 'group'));
         if (groups.length == 0) {
             data = _.map(data, d => {
@@ -35633,7 +35637,7 @@ const barChart = function () {
                     orient: 'bottom',
                     fontweight: 'regular',
                     size: '1em',
-                    distance: labelDistance,
+                    distance: xlabelDistance,
                     text: xLabel,
                     margin: margin
                 });
@@ -35646,7 +35650,7 @@ const barChart = function () {
                     orient: 'left',
                     fontweight: 'regular',
                     size: '1em',
-                    distance: labelDistance,
+                    distance: ylabelDistance,
                     text: yLabel,
                     margin: margin
                 });
@@ -35775,6 +35779,18 @@ const barChart = function () {
         return chart;
     };
 
+    chart.xlabelDistance = function (_) {
+        if (!arguments.length) return xlabelDistance;
+        xlabelDistance = _;
+        return chart;
+    };
+
+    chart.ylabelDistance = function (_) {
+        if (!arguments.length) return ylabelDistance;
+        ylabelDistance = _;
+        return chart;
+    };
+
     chart.yLabel = function (_) {
         if (!arguments.length) return yLabel;
         yLabel = _;
@@ -35826,10 +35842,10 @@ const barChart = function () {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return multilineChart; });
+/* unused harmony export multilineChart */
 /* unused harmony export lineDatum */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__chartUtils_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_js__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__chartUtils_js__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_js__ = __webpack_require__(2);
 
 
 const d3 = __webpack_require__(0);
@@ -36028,7 +36044,7 @@ const multilineChart = function () {
                 focus.append("g").attr("stroke", "black").attr("stroke-dasharray", "0.5, 3").append("line").attr("class", "focus line").attr("y1", yScale(yMin)).attr("y2", yScale(yMax)).attr("stroke-width", 1);
 
                 // Focus x-axis label
-                focus.append("g").attr("class", "focus xhead").append("text").attr("y", yScale((yMin + yMax) / 2) - 20).attr("x", xScale(xMin) + 0.01 * (xScale(xMax) - xScale(xMin))).style("font-size", "0.8em").style("text-anchor", "end").attr("dy", "0.35em").text("Repeat length");
+                focus.append("g").attr("class", "focus xhead").append("text").attr("y", yScale((yMin + yMax) / 2) - 20).attr("x", xScale(xMin) + 0.01 * (xScale(xMax) - xScale(xMin))).style("font-size", "0.8em").style("text-anchor", "end").attr("dy", "0.35em").text("Repeat Units"); //("Repeat length");
 
                 // Focus x-axis text
                 focus.append("g").attr("class", "focus xtext").append("text").attr("y", yScale((yMin + yMax) / 2)).attr("x", xScale(xMin) + 0.01 * (xScale(xMax) - xScale(xMin))).style("font-size", "0.8em").style("text-anchor", "end").attr("dy", "0.35em");
@@ -36043,7 +36059,7 @@ const multilineChart = function () {
                 }).attr("dy", "0.35em");
 
                 // Focus y-axis label
-                focus.append("g").attr("class", "focus yhead").append('text').style("font-size", "0.8em").attr("dy", "0.35em").attr("y", yHoverTextStart - 20).text("Frequency");
+                focus.append("g").attr("class", "focus yhead").append('text').style("font-size", "0.8em").attr("dy", "0.35em").attr("y", yHoverTextStart - 20).text("Frequency"); //("Frequency");
 
                 const mousemove = function () {
                     let hoverX = Math.round(xScale.invert(plotStartx + d3.mouse(this)[0]));
@@ -36054,7 +36070,7 @@ const multilineChart = function () {
                     // Handling the text for showing x-coordinate
                     focus.select(".focus.xtext").select("text").attr("x", function () {
                         let out = toolTipDist <= 10 ? xScale(hoverX) - toolTipDist : xScale(hoverX) - 10;return out;
-                    }).text(hoverX + "bp");
+                    }).text(hoverX + "");
                     focus.select(".focus.xhead").select("text").attr("x", function () {
                         let out = toolTipDist <= 10 ? xScale(hoverX) - toolTipDist : xScale(hoverX) - 10;return out;
                     });
@@ -36084,7 +36100,7 @@ const multilineChart = function () {
                             return o[x] == hoverX;
                         });
                         const Val = xIndex != -1 ? d['values'][xIndex][y] : 0;
-                        if (hoverX >= 12) {
+                        if (hoverX >= -3000) {
                             return `${d['name']}:  ${Val}`;
                         }
                     });
@@ -36137,6 +36153,7 @@ const multilineChart = function () {
         };
 
         const updateData = function () {
+            console.log('Data  changed!');
             duration = 1000;
             xMax = _.max(_.map(_.flatten(_.map(data, o => {
                 return o['values'];
@@ -36255,15 +36272,15 @@ const multilineChart = function () {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return pieChart; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__chartUtils_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_js__ = __webpack_require__(3);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__tooltip_js__ = __webpack_require__(4);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__chartUtils_js__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_js__ = __webpack_require__(2);
 
 
 const d3 = __webpack_require__(0);
 const _ = __webpack_require__(1);
 
 
+// import { tooltip } from "./tooltip.js"
 
 
 /*-- 1. Data format
@@ -36342,13 +36359,9 @@ const pieChart = function () {
 
             const path = d3.arc().outerRadius(radius - 10).innerRadius(2);
 
-            let pieTooltip = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__tooltip_js__["a" /* tooltip */])().header({ datum: function (d) {
-                    return d.data.name;
-                } }).prop({
-                datum: function (d) {
-                    return `<div style="margin-bottom: 3px">Frequency: ${d.data.value}</div> <div> Percentage: ${d.data.percentage}%</div>`;
-                }
-            });
+            // let pieTooltip = tooltip().header({ datum: function(d) { return d.data.name; } }).prop({
+            //     datum: function(d) { return `<div style="margin-bottom: 3px">Frequency: ${d.data.value}</div> <div> Percentage: ${d.data.percentage}%</div>`; }
+            // });
 
             let plotArc = plotCanvas.selectAll(".arc").data(plotData);
             let plotArcGroup = plotArc.enter().append("g").attr("class", "arc");
@@ -36357,7 +36370,9 @@ const pieChart = function () {
 
             plotArcGroup.append("path").attr("fill", function (d, i) {
                 return colorObj[d.data.name];
-            }).call(pieTooltip).transition().duration(250).attrTween('d', function (d) {
+            })
+            // .call(pieTooltip)
+            .transition().duration(250).attrTween('d', function (d) {
                 const i = d3.interpolate(d.startAngle + 0, d.endAngle);
                 return function (t) {
                     d.endAngle = i(t);return path(d);
@@ -36426,7 +36441,9 @@ const pieChart = function () {
             //     .style("text-anchor", "center")
             //     .text(function(d) { return `${d.data.name} ${d.data.percentage}%`; });
 
-            plotArc.select("path").call(pieTooltip).transition().duration(250).attrTween('d', function (d) {
+            plotArc.select("path")
+            // .call(pieTooltip)
+            .transition().duration(250).attrTween('d', function (d) {
                 const i = d3.interpolate(d.startAngle + 0, d.endAngle);
                 return function (t) {
                     d.endAngle = i(t);return path(d);
@@ -36541,9 +36558,7 @@ const pieChart = function () {
             draw();
         };
 
-        if (windowResize) {
-            window.onresize = _.debounce(updateResize, 300);
-        }
+        // if (windowResize) { window.onresize = _.debounce(updateResize, 300); }
 
         draw();
     };
@@ -36582,14 +36597,16 @@ const pieChart = function () {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* unused harmony export scatterChart */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__chartUtils_js__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_js__ = __webpack_require__(3);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return scatterChart; });
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__chartUtils_js__ = __webpack_require__(3);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__utils_js__ = __webpack_require__(2);
 
 
 const d3 = __webpack_require__(0);
 const _ = __webpack_require__(1);
 
+
+// import { tooltip } from "./tooltip.js"
 
 
 /* -------------------  Convert data readable for the bar chart function  -----------------------*/
@@ -36630,19 +36647,25 @@ const scatterChart = function (Obj) {
 
     /* Defining defaults for different plotting parameters. */
 
+    // Customizable chart properties
     let data = [];
-    let margin = { top: 40, right: 20, bottom: 40, left: 40 };
+    let width = '80vw';
+    let height = '80vh';
+    let margin = { top: 20, right: 20, bottom: 40, left: 40 };
 
+    let color = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["a" /* colorPalette */])(19, 700);
     let xLabel = 'X-axis';
     let yLabel = 'Y-axis';
-    let color = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["a" /* colorPalette */])(19, 700);
-    let rotateXtick = Obj.rotateXtick ? Obj.rotateXtick : 0; // Rotating the X-ticks
+    let windowResize = true;
+    let xlabelDistance = 20;
+    let ylabelDistance = 20;
 
     let xMax, xMin, yMax, yMin;
 
     let chart = function (selection) {
 
-        const svg = selection.append('svg').attr('height', height).attr('width', width).attr('id', 'multiline-chart').attr('class', 'multiline');
+        const svg = selection.append('svg').attr('height', height).attr('width', width).attr('id', 'scatter-chart').attr('class', 'scatter');
+        const toolTipdiv = selection.append('div').attr('class', 'tooltip'); //.style('position', 'absolute');
         let svgH = parseInt(svg.style('height').substr(0, svg.style('height').length - 2));
         let svgW = parseInt(svg.style('width').substr(0, svg.style('width').length - 2));
 
@@ -36651,10 +36674,10 @@ const scatterChart = function (Obj) {
         });
         // _.forEach(data, function(o, i) { colorObj[o.name] = color[i]; });
 
-        const plotH = svgH - margin.top - margin.bottom; // Calculating the actual width of the plot
-        const plotW = svgW - margin.left - margin.right; // Calculating the actual height of the plot
-        const plotStartx = margin.left; // X-coordinate of the start of the plot
-        const plotStarty = margin.top; // Y-coordinate of the start of the plot
+        let plotH = svgH - margin.top - margin.bottom; // Calculating the actual width of the plot
+        let plotW = svgW - margin.left - margin.right; // Calculating the actual height of the plot
+        let plotStartx = margin.left; // X-coordinate of the start of the plot
+        let plotStarty = margin.top; // Y-coordinate of the start of the plot
 
         xMax = _.max(_.map(data, o => {
             return parseFloat(o['x']);
@@ -36670,12 +36693,18 @@ const scatterChart = function (Obj) {
         }));
 
         /* ---------------  Defining X-axis ------------------- */
-        const xScale = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["b" /* scale */])({ domain: [xMin, xMax], range: [plotStartx, plotStartx + plotW], scaleType: 'linear' });
+        const xScale = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["b" /* scale */])({
+            domain: [xMin, xMax],
+            range: [plotStartx, plotStartx + plotW],
+            scaleType: 'linear' });
         const xAxis = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["c" /* axis */])({ scale: xScale, orient: 'bottom' });
         const xAxisElement = svg.append('g').attr('class', 'scatter x axis').attr('transform', `translate(0, ${plotStarty + plotH})`);
 
         /* ---------------  Defining Y-axis ------------------- */
-        const yScale = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["b" /* scale */])({ domain: [yMin, yMax], range: [plotH + plotStarty, plotStarty], scaleType: 'linear' });
+        const yScale = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["b" /* scale */])({
+            domain: [yMin, yMax],
+            range: [plotH + plotStarty, plotStarty],
+            scaleType: 'linear' });
         const yAxis = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["c" /* axis */])({ scale: yScale, ticks: 6, tickformat: 'thousands' });
         const yAxisElement = svg.append('g').attr('class', 'scatter y axis').attr('transform', `translate( ${margin.left} , 0)`);
 
@@ -36683,8 +36712,9 @@ const scatterChart = function (Obj) {
         const plotCanvas = svg.append('g').attr('id', 'scatter-plotCanvas');
 
         const draw = function () {
-            svg.select('.multiline.x.axis').call(xAxis);
-            svg.select('.multiline.y.axis').call(yAxis);
+
+            svg.select('.scatter.x.axis').call(xAxis);
+            svg.select('.scatter.y.axis').call(yAxis);
 
             svg.selectAll('.axislabel').remove();
             /* -- Adding X-axis label ----------------------------------------------- */
@@ -36694,7 +36724,7 @@ const scatterChart = function (Obj) {
                     orient: 'bottom',
                     fontweight: 'regular',
                     size: '1em',
-                    distance: labelDistance,
+                    distance: xlabelDistance,
                     text: xLabel,
                     margin: margin
                 });
@@ -36707,7 +36737,7 @@ const scatterChart = function (Obj) {
                     orient: 'left',
                     fontweight: 'regular',
                     size: '1em',
-                    distance: labelDistance,
+                    distance: ylabelDistance,
                     text: yLabel,
                     margin: margin
                 });
@@ -36747,6 +36777,17 @@ const scatterChart = function (Obj) {
                 return xScale(d.x);
             }).attr("cy", function (d) {
                 return yScale(d.y);
+            }).on('mouseover', function () {
+                console.log('Mouse hovered!');
+                toolTipdiv.select('*').remove();
+                toolTipdiv.append('div').html('Added just now');
+
+                let mouseX = event.clientX;
+                let mouseY = event.clientY;
+
+                // toolTipdiv.attr('transform', `translate(${mouseX}, ${mouseY})`);
+            }).on('mouseout', function () {
+                toolTipdiv.select('*').remove();
             });
 
             scatterFigure.transition().duration(750).attr("fill", color[0]).attr("r", 6).attr("cx", function (d) {
@@ -36778,7 +36819,8 @@ const scatterChart = function (Obj) {
             draw();
         };
 
-        const updateResize = function () {
+        let updateResize = function () {
+            console.log('windowResize called!');
             duration = 0;
             svgH = parseInt(svg.style('height').substr(0, svg.style('height').length - 2));
             svgW = parseInt(svg.style('width').substr(0, svg.style('width').length - 2));
@@ -36794,18 +36836,27 @@ const scatterChart = function (Obj) {
 
             draw();
         };
+
+        if (windowResize) {
+            window.onresize = _.debounce(updateResize, 300);
+        }
+
+        draw();
     };
 
     chart.data = function (_) {
         if (!arguments.length) return data;
         data = _;
-        if (typeof updateData === 'function') updateData();
+        if (typeof updateData === 'function') {
+            updateData();
+        };
         return chart;
     };
 
     chart.height = function (_) {
         if (!arguments.length) return height;
         height = _;
+        console.log(height);
         return chart;
     };
 
@@ -36855,9 +36906,9 @@ const scatterChart = function (Obj) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return stackChart; });
+/* unused harmony export stackChart */
 /* unused harmony export stackData */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__chartUtils_js__ = __webpack_require__(2);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__chartUtils_js__ = __webpack_require__(3);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__tooltip_js__ = __webpack_require__(4);
 
 
@@ -37244,8 +37295,10 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__pieChart_js__ = __webpack_require__(7);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__scatterChart_js__ = __webpack_require__(8);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__barChart_js__ = __webpack_require__(5);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__utils_js__ = __webpack_require__(2);
 const _ = __webpack_require__(1);
 const d3 = __webpack_require__(0);
+
 
 
 
@@ -37256,65 +37309,16 @@ const d3 = __webpack_require__(0);
 /* Trial stack bar chart */
 d3.tsv('../data/bar_data_2.tsv', function (data) {
     const barchartRoot = d3.select('#bar-main');
-    const newBarChart = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__barChart_js__["a" /* barChart */])().data(data).margin({ top: 40, bottom: 60, left: 80, right: 30 });
+    const newBarChart = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__barChart_js__["a" /* barChart */])().data(data).margin({ top: 40, bottom: 60, left: 80, right: 30 }).xLabel('Repeats').yLabel('Abundance');
+
     barchartRoot.call(newBarChart);
 });
 
-d3.tsv('../data/BT.tsv', function (data) {
+d3.tsv('../data/scatter_data.tsv', function (data) {
+    const scatterChartRoot = d3.select('#scatter-main');
+    const newScatterChart = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_3__scatterChart_js__["a" /* scatterChart */])().margin({ top: 40, left: 80, right: 40, bottom: 80 }).data(data);
 
-    let names = _.map(_.uniqBy(data, 'repClass'), o => {
-        return o.repClass;
-    });
-    let units = _.map(_.uniqBy(data, 'units'), o => {
-        return parseInt(o.units);
-    }).sort();
-    data = _.map(names, o => {
-        let values = _.map(_.filter(data, { repClass: o }), p => {
-            return { x: parseInt(p.units), y: parseInt(p.freq) };
-        });return { name: o, values: values };
-    });
-    data = _.map(data, o => {
-        let values = o.values;
-        values = _.filter(values, d => {
-            return d.x <= 50 && d.x >= 8;
-        });
-        o.values = values;
-        return o;
-    });
-    const lineRoot = d3.select('#line-main');
-    const newLineChart = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__lineChart_js__["a" /* multilineChart */])().data(data).margin({ top: 20, right: 20, bottom: 40, left: 80 }).xLabel('Repeat Units').yLabel('Frequency');
-    lineRoot.call(newLineChart);
-});
-
-/* Trial stack bar chart */
-d3.tsv('../data/data.tsv', function (data) {
-
-    let keys = _.uniq(_.map(data, d => {
-        return d.repEnd;
-    }));
-    data = _.map(data, o => {
-        o[o['repEnd']] = parseInt(o['freq']);
-        o['x'] = o['repLen'];
-        delete o['repEnd'];
-        delete o['freq'];
-        return o;
-    });
-    data = _.map(_.groupBy(data, o => {
-        return o['repLen'];
-    }), d => {
-        let obj = {};
-        for (let a in d) {
-            a = d[a];for (let b in a) {
-                obj[b] = a[b];
-            }
-        }
-        return obj;
-    });
-
-    const stackchartRoot = d3.select('#stacked-main');
-    const newStackedChart = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__stackChart_js__["a" /* stackChart */])().data(data).keys(keys).margin({ left: 60, top: 20, right: 20, bottom: 60 }).xLabel('Repeat Length').yLabel('Frequency').labelDistance(20);
-
-    stackchartRoot.call(newStackedChart);
+    scatterChartRoot.call(newScatterChart);
 });
 
 /* Trial Pie chart */
@@ -37323,6 +37327,86 @@ d3.tsv("../data/pie_data.tsv", function (data) {
     const newPieChart = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_2__pieChart_js__["a" /* pieChart */])().data(data).piePosition('center');
     pieRoot.call(newPieChart);
 });
+/* Trial line chart */
+// d3.tsv('../data/repHFR.tsv', function(data) {
+
+//     let repeats = _.uniq(_.map(data, 'repeat'));
+//     let names = _.uniq(_.map(data, 'name'));
+//     let xValues = _.range(1, 302);
+//     let xLabels = _.range(-150, 151);
+
+//     let plotdata = {};
+//     for (let r in repeats) {
+//         let rep = repeats[r];
+//         let repData = _.filter(data, ['repeat', rep]);
+//         console.log(rep);
+//         plotdata[rep] = [];
+//         for (let n in names) {
+//             n = names[n];
+//             let obj = { name: n, values: [] }
+//             for (let x in xValues) {
+//                 let win = xValues[x];
+//                 let y = _.filter(repData, ['name', n])[0]['win_' + win]
+//                 obj.values.push({ 'x': xLabels[x], 'y': parseFloat(y) })
+//             }
+//             plotdata[rep].push(obj);
+//         }
+//     }
+//     let lineRoot = d3.select('#line-main');
+//     let newLineChart = multilineChart().data(plotdata[repeats[0]]).margin({ top: 20, right: 20, bottom: 60, left: 80 }).xLabel('Window number').yLabel('Coverage');
+//     lineRoot.call(newLineChart);
+
+//     dropdown.on('change', function() {
+//         lineRoot.select('svg').remove();
+//         newLineChart = multilineChart().data(plotdata[this.value]).margin({ top: 20, right: 20, bottom: 60, left: 80 }).yLabel('Coverage').xLabel('Window number');
+//         lineRoot.call(newLineChart);
+//     })
+
+// })
+
+// d3.tsv('../data/BT.tsv', function(data) {
+
+//     let names = _.map(_.uniqBy(data, 'repClass'), o => { return o.repClass; });
+//     let units = (_.map(_.uniqBy(data, 'units'), o => { return parseInt(o.units); })).sort();
+//     data = _.map(names, o => { let values = _.map(_.filter(data, { repClass: o }), p => { return { x: parseInt(p.units), y: parseInt(p.freq) } }); return { name: o, values: values } });
+//     data = _.map(data, o => {
+//         let values = o.values;
+//         values = _.filter(values, d => { return d.x <= 50 && d.x >= 2; });
+//         o.values = values;
+//         return o;
+//     })
+//     console.log(data)
+//     let lineRoot = d3.select('#line-main');
+//     let newLineChart = multilineChart().data(data).margin({ top: 20, right: 20, bottom: 60, left: 80 }).xLabel('Repeat units').yLabel('Frequency');
+//     lineRoot.call(newLineChart);
+// })
+
+/* Trial stack bar chart */
+// d3.tsv('../data/data.tsv', function(data) {
+
+//     let keys = _.uniq(_.map(data, d => { return d.repEnd; }));
+//     data = _.map(data, o => {
+//         o[o['repEnd']] = parseInt(o['freq']);
+//         o['x'] = o['repLen'];
+//         delete o['repEnd'];
+//         delete o['freq'];
+//         return o;
+//     });
+//     data = _.map(_.groupBy(data, o => { return o['repLen']; }), d => {
+//         let obj = {};
+//         for (let a in d) { a = d[a]; for (let b in a) { obj[b] = a[b]; } }
+//         return obj;
+//     });
+
+//     const stackchartRoot = d3.select('#stacked-main');
+//     const newStackedChart = stackChart().data(data).keys(keys)
+//         .margin({ left: 60, top: 20, right: 20, bottom: 60 })
+//         .xLabel('Repeat Length')
+//         .yLabel('Frequency')
+//         .labelDistance(20);
+
+//     stackchartRoot.call(newStackedChart);
+// })
 
 /***/ }),
 /* 11 */

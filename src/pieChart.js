@@ -4,7 +4,7 @@ const d3 = require('d3');
 const _ = require('lodash');
 import { scale, axis, axislabel, rotateXticks, colorPalette } from "./chartUtils.js"
 import { getUniqueElements } from "./utils.js"
-import { tooltip } from "./tooltip.js"
+// import { tooltip } from "./tooltip.js"
 
 
 /*-- 1. Data format
@@ -73,9 +73,9 @@ const pieChart = function() {
                 .outerRadius(radius - 10)
                 .innerRadius(2);
 
-            let pieTooltip = tooltip().header({ datum: function(d) { return d.data.name; } }).prop({
-                datum: function(d) { return `<div style="margin-bottom: 3px">Frequency: ${d.data.value}</div> <div> Percentage: ${d.data.percentage}%</div>`; }
-            });
+            // let pieTooltip = tooltip().header({ datum: function(d) { return d.data.name; } }).prop({
+            //     datum: function(d) { return `<div style="margin-bottom: 3px">Frequency: ${d.data.value}</div> <div> Percentage: ${d.data.percentage}%</div>`; }
+            // });
 
             let plotArc = plotCanvas.selectAll(".arc").data(plotData);
             let plotArcGroup = plotArc.enter().append("g").attr("class", "arc");
@@ -84,7 +84,7 @@ const pieChart = function() {
 
             plotArcGroup.append("path")
                 .attr("fill", function(d, i) { return colorObj[d.data.name] })
-                .call(pieTooltip)
+                // .call(pieTooltip)
                 .transition()
                 .duration(250)
                 .attrTween('d', function(d) {
@@ -167,7 +167,7 @@ const pieChart = function() {
             //     .text(function(d) { return `${d.data.name} ${d.data.percentage}%`; });
 
             plotArc.select("path")
-                .call(pieTooltip)
+                // .call(pieTooltip)
                 .transition()
                 .duration(250)
                 .attrTween('d', function(d) {
@@ -303,7 +303,7 @@ const pieChart = function() {
             draw();
         }
 
-        if (windowResize) { window.onresize = _.debounce(updateResize, 300); }
+        // if (windowResize) { window.onresize = _.debounce(updateResize, 300); }
 
         draw();
     }

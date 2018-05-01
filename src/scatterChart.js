@@ -4,6 +4,7 @@ const d3 = require('d3');
 const _ = require('lodash');
 import { scale, axis, axislabel, rotateXticks, colorPalette } from "./chartUtils.js"
 import { getUniqueElements, getMatchingColumn } from "./utils.js"
+// import { tooltip } from "./tooltip.js"
 
 
 /* -------------------  Convert data readable for the bar chart function  -----------------------*/
@@ -44,42 +45,54 @@ const scatterChart = function(Obj) {
 
     /* Defining defaults for different plotting parameters. */
 
+    // Customizable chart properties
     let data = [];
-    let margin = { top: 40, right: 20, bottom: 40, left: 40 };
+    let width = '80vw';
+    let height = '80vh';
+    let margin = { top: 20, right: 20, bottom: 40, left: 40 };
 
+    let color = colorPalette(19, 700);
     let xLabel = 'X-axis';
     let yLabel = 'Y-axis';
-    let color = colorPalette(19, 700);
-    let rotateXtick = (Obj.rotateXtick) ? Obj.rotateXtick : 0; // Rotating the X-ticks
+    let windowResize = true;
+    let xlabelDistance = 20;
+    let ylabelDistance = 20;
 
     let xMax, xMin, yMax, yMin;
 
     let chart = function(selection) {
 
-        const svg = selection.append('svg').attr('height', height).attr('width', width).attr('id', 'multiline-chart').attr('class', 'multiline');
+        const svg = selection.append('svg').attr('height', height).attr('width', width).attr('id', 'scatter-chart').attr('class', 'scatter');
+        const toolTipdiv = selection.append('div').attr('class', 'tooltip'); //.style('position', 'absolute');
         let svgH = parseInt(svg.style('height').substr(0, svg.style('height').length - 2));
         let svgW = parseInt(svg.style('width').substr(0, svg.style('width').length - 2));
 
         data = _.map(data, d => { d.view = 1; return d; });
         // _.forEach(data, function(o, i) { colorObj[o.name] = color[i]; });
-
-        const plotH = svgH - margin.top - margin.bottom; // Calculating the actual width of the plot
-        const plotW = svgW - margin.left - margin.right; // Calculating the actual height of the plot
-        const plotStartx = margin.left; // X-coordinate of the start of the plot
-        const plotStarty = margin.top; // Y-coordinate of the start of the plot
-
+        
+        let plotH = svgH - margin.top - margin.bottom; // Calculating the actual width of the plot
+        let plotW = svgW - margin.left - margin.right; // Calculating the actual height of the plot
+        let plotStartx = margin.left; // X-coordinate of the start of the plot
+        let plotStarty = margin.top; // Y-coordinate of the start of the plot
+        
         xMax = _.max(_.map(data, o => { return parseFloat(o['x']) }));
         yMax = _.max(_.map(data, o => { return parseFloat(o['y']) }));
         xMin = _.min(_.map(data, o => { return parseFloat(o['x']) }));
         yMin = _.min(_.map(data, o => { return parseFloat(o['y']) }));
 
         /* ---------------  Defining X-axis ------------------- */
-        const xScale = scale({ domain: [xMin, xMax], range: [plotStartx, plotStartx + plotW], scaleType: 'linear' });
+        const xScale = scale({ 
+            domain: [xMin, xMax], 
+            range: [plotStartx, plotStartx + plotW], 
+            scaleType: 'linear' });
         const xAxis = axis({ scale: xScale, orient: 'bottom' });
         const xAxisElement = svg.append('g').attr('class', 'scatter x axis').attr('transform', `translate(0, ${plotStarty + plotH})`);
 
         /* ---------------  Defining Y-axis ------------------- */
-        const yScale = scale({ domain: [yMin, yMax], range: [plotH + plotStarty, plotStarty], scaleType: 'linear', });
+        const yScale = scale({ 
+            domain: [yMin, yMax], 
+            range: [plotH + plotStarty, plotStarty], 
+            scaleType: 'linear', });
         const yAxis = axis({ scale: yScale, ticks: 6, tickformat: 'thousands' });
         const yAxisElement = svg.append('g').attr('class', 'scatter y axis').attr('transform', `translate( ${margin.left} , 0)`);
 
@@ -87,8 +100,9 @@ const scatterChart = function(Obj) {
         const plotCanvas = svg.append('g').attr('id', 'scatter-plotCanvas');
 
         const draw = function() {
-            svg.select('.multiline.x.axis').call(xAxis);
-            svg.select('.multiline.y.axis').call(yAxis);
+            
+            svg.select('.scatter.x.axis').call(xAxis);
+            svg.select('.scatter.y.axis').call(yAxis);
 
             svg.selectAll('.axislabel').remove();
             /* -- Adding X-axis label ----------------------------------------------- */
@@ -98,7 +112,7 @@ const scatterChart = function(Obj) {
                     orient: 'bottom',
                     fontweight: 'regular',
                     size: '1em',
-                    distance: labelDistance,
+                    distance: xlabelDistance,
                     text: xLabel,
                     margin: margin
                 });
@@ -111,7 +125,7 @@ const scatterChart = function(Obj) {
                     orient: 'left',
                     fontweight: 'regular',
                     size: '1em',
-                    distance: labelDistance,
+                    distance: ylabelDistance,
                     text: yLabel,
                     margin: margin
                 });
@@ -143,7 +157,20 @@ const scatterChart = function(Obj) {
                 .attr("fill", color[0])
                 .attr("r", 6)
                 .attr("cx", function(d) { return xScale(d.x); })
-                .attr("cy", function(d) { return yScale(d.y); });
+                .attr("cy", function(d) { return yScale(d.y); })
+                .on('mouseover', function(){
+                    console.log('Mouse hovered!');
+                    toolTipdiv.select('*').remove();
+                    toolTipdiv.append('div').html('Added just now');
+
+                    let mouseX = event.clientX;
+                    let mouseY = event.clientY;
+
+                    // toolTipdiv.attr('transform', `translate(${mouseX}, ${mouseY})`);
+                })
+                .on('mouseout', function(){
+                    toolTipdiv.select('*').remove();
+                });
 
             scatterFigure.transition().duration(750)
                 .attr("fill", color[0])
@@ -164,7 +191,8 @@ const scatterChart = function(Obj) {
             draw();
         }
 
-        const updateResize = function() {
+        let updateResize = function() {
+            console.log('windowResize called!');
             duration = 0;
             svgH = parseInt(svg.style('height').substr(0, svg.style('height').length - 2));
             svgW = parseInt(svg.style('width').substr(0, svg.style('width').length - 2));
@@ -181,18 +209,24 @@ const scatterChart = function(Obj) {
             draw();
         }
 
+        
+        if (windowResize) { window.onresize = _.debounce(updateResize, 300); }
+
+        draw();
+
     }
 
     chart.data = function(_) {
         if (!arguments.length) return data;
         data = _;
-        if (typeof updateData === 'function') updateData();
+        if (typeof updateData === 'function') {updateData()};
         return chart;
     }
 
     chart.height = function(_) {
         if (!arguments.length) return height;
         height = _;
+        console.log(height);
         return chart;
     }
 
