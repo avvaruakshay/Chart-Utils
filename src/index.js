@@ -1,3 +1,5 @@
+"use strict";
+
 const _ = require("lodash")
 const d3 = require("d3")
 
@@ -10,7 +12,7 @@ import { pieDatum, pieChart } from './pieChart.js'
 import { scatterChart } from './scatterChart.js'
 import { barChart } from './barChart.js'
 import { getUniqueElements, getMatchingRows } from './utils.js'
-
+import { drawSlate } from './drawSlate.js'
 
 const plotChart = function(chartType){
     const chartRoot = d3.select('#chart-area');
@@ -27,10 +29,12 @@ const plotChart = function(chartType){
         });
     }
     else if (chartType === "scatter")  {
-        d3.tsv('../data/scatter_data.tsv', function(data){
+        d3.tsv( '../data/scatter_data.tsv', function(data) {
             const newScatterChart = scatterChart()
                                     .margin({top: 40, left: 80, right: 40, bottom: 80})
-                                    .data(data);
+                                    .data(data)
+                                    .xLabel('Genome size(MB)')
+                                    .yLabel('SSR density');
             
             chartRoot.call(newScatterChart);
         })
@@ -58,6 +62,10 @@ const plotChart = function(chartType){
             const newPieChart = pieChart().data(data).piePosition('center');
             chartRoot.call(newPieChart);
         })
+    }
+    else if (chartType === 'slate') {
+        console.log('Slate is activated!')
+        drawSlate(chartRoot);
     }
 }
 
@@ -98,28 +106,6 @@ document.getElementById('scatter').click();
 
 
 
-
-
-
-
-
-
-// d3.tsv('../data/BT.tsv', function(data) {
-
-//     let names = _.map(_.uniqBy(data, 'repClass'), o => { return o.repClass; });
-//     let units = (_.map(_.uniqBy(data, 'units'), o => { return parseInt(o.units); })).sort();
-//     data = _.map(names, o => { let values = _.map(_.filter(data, { repClass: o }), p => { return { x: parseInt(p.units), y: parseInt(p.freq) } }); return { name: o, values: values } });
-//     data = _.map(data, o => {
-//         let values = o.values;
-//         values = _.filter(values, d => { return d.x <= 50 && d.x >= 2; });
-//         o.values = values;
-//         return o;
-//     })
-//     console.log(data)
-//     let lineRoot = d3.select('#line-main');
-//     let newLineChart = multilineChart().data(data).margin({ top: 20, right: 20, bottom: 60, left: 80 }).xLabel('Repeat units').yLabel('Frequency');
-//     lineRoot.call(newLineChart);
-// })
 
 /* Trial stack bar chart */
 // d3.tsv('../data/data.tsv', function(data) {

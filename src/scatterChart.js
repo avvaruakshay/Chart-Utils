@@ -1,36 +1,12 @@
 'use strict';
 
-const d3 = require('d3');
+let d3 = require('d3');
 const _ = require('lodash');
+
 import { scale, axis, axislabel, rotateXticks, colorPalette } from "./chartUtils.js"
 import { getUniqueElements, getMatchingColumn } from "./utils.js"
 // import { tooltip } from "./tooltip.js"
 
-
-/* -------------------  Convert data readable for the bar chart function  -----------------------*/
-const scatterDatum = function(data, xVector, yVector, level) {
-    let dataOut = [];
-
-    for (let d in _.range(data.length)) {
-        d = data[d];
-        let dataObj = {};
-        dataObj.x = parseFloat(d[xVector]).toFixed(2);
-        dataObj.y = parseFloat(d[yVector]).toFixed(2);
-        dataObj.key = d.Organism;
-        dataObj.colorKey = d[level];
-        dataOut.push(dataObj);
-    }
-
-    const scatterObj = {
-        data: dataOut,
-        xLabel: tipNames[xVector],
-        yLabel: tipNames[yVector],
-        svgid: "graph-svg",
-        margin: { top: 20, right: 10, bottom: 50, left: 70 },
-    }
-
-    return scatterObj;
-}
 
 /*-- 1. Data format
      data type: list of objects
@@ -47,8 +23,8 @@ const scatterChart = function(Obj) {
 
     // Customizable chart properties
     let data = [];
-    let width = '95%';
-    let height = '95%';
+    let width = '100%';
+    let height = '100%';
     let margin = { top: 20, right: 20, bottom: 40, left: 40 };
 
     let color = colorPalette(19, 700);
@@ -67,10 +43,12 @@ const scatterChart = function(Obj) {
         let mainDivY = mainDiv.getBoundingClientRect().y;
 
         const svg = selection.append('svg').attr('height', height).attr('width', width).attr('id', 'scatter-chart').attr('class', 'scatter');
-        const toolTipdiv = selection.append('div').attr('class', 'scattertip').style('position', 'absolute');
         let svgH = parseInt(svg.style('height').substr(0, svg.style('height').length - 2));
         let svgW = parseInt(svg.style('width').substr(0, svg.style('width').length - 2));
-
+        let svgX = svg.node().getBoundingClientRect().x;
+        let svgY = svg.node().getBoundingClientRect().y;
+        
+        // console.log(data);
         data = _.map(data, d => { d.view = 1; return d; });
         // _.forEach(data, function(o, i) { colorObj[o.name] = color[i]; });
         
@@ -78,11 +56,18 @@ const scatterChart = function(Obj) {
         let plotW = svgW - margin.left - margin.right; // Calculating the actual height of the plot
         let plotStartx = margin.left; // X-coordinate of the start of the plot
         let plotStarty = margin.top; // Y-coordinate of the start of the plot
-        
+        const toolTipdiv = selection.append('div').attr('class', 'scattertip')
+                                    .style('position', 'absolute');
+
         xMax = _.max(_.map(data, o => { return parseFloat(o['x']) }));
         yMax = _.max(_.map(data, o => { return parseFloat(o['y']) }));
         xMin = _.min(_.map(data, o => { return parseFloat(o['x']) }));
         yMin = _.min(_.map(data, o => { return parseFloat(o['y']) }));
+
+        xMax += 0.01*(xMax-xMin);
+        xMin -= 0.01*(xMax-xMin);
+        yMax += 0.01*(yMax-yMin);
+        yMin -= 0.01*(yMax-yMin);
 
         /* ---------------  Defining X-axis ------------------- */
         const xScale = scale({ 
@@ -146,6 +131,10 @@ const scatterChart = function(Obj) {
             yMax = _.max(_.map(currentData, o => { return parseFloat(o['y']) }));
             xMin = _.min(_.map(currentData, o => { return parseFloat(o['x']) }));
             yMin = _.min(_.map(currentData, o => { return parseFloat(o['y']) }));
+            xMax += 0.01*(xMax-xMin);
+            xMin -= 0.01*(xMax-xMin);
+            yMax += 0.01*(yMax-yMin);
+            yMin -= 0.01*(yMax-yMin);
             xScale.domain([xMin, xMax]);
             yScale.domain([yMin, yMax]);
             svg.select('.scatter.x.axis').call(xAxis);
@@ -159,31 +148,47 @@ const scatterChart = function(Obj) {
                 .append("circle")
                 .attr("class", "scatter dot")
                 .attr("fill", color[0])
+                .attr("stroke", color[0])
+                .attr("stroke-width", '1px')
                 .attr("r", 4)
-                .attr("cx", function(d) { return xScale(d.x); })
-                .attr("cy", function(d) { return yScale(d.y); })
+                .attr("cx", function(d) { return xScale(Math.random() * xMax)})
+                .attr("cy", function(d) { return yScale(Math.random() * yMax)})
+                .style('opacity', 0.7)
                 .on('mouseover', function(d){
-                    console.log('Mouse hovered!');
+                    // console.log(this);
+                    d3.select(this).attr('r', '6');
+                    let cx = d3.select(this).attr('cx');
+                    let cy = d3.select(this).attr('cy');
+                    console.log(cx, cy);
                     let mouseX = event.clientX;
                     let mouseY = event.clientY;
-                    toolTipdiv.style('display', 'inline')
-                              .style('left', `${mouseX - mainDivX + 10}px`)
-                              .style('top', `${mouseY - mainDivY - 80}px`)
-                              .style('background', 'rgb(104, 104, 104, 0.4)')
-                              .style('padding', '10px')
-                              .style('border-radius', '10px');
-                            //   .attr('transform', `translate(${mouseX}px, ${mouseY}px)`)
-                    toolTipdiv.append('div').html(`<span><b>${d.name}</b></span><br><span>${xLabel}: ${d.x}</span><br><span>${yLabel}: ${d.y}</span>`);
+                    toolTipdiv.style('display', 'block')
+                              .style('left', 0 + 'px')
+                              .style('top', 0 + 'px')
+                              .attr('class', 'the-tip')
+                              .html(`<span><b>${d.name}</b></span><br><span>${xLabel}: ${d.x}</span><br><span>${yLabel}: ${d.y}</span>`);
+                    let tipHeight = toolTipdiv.node().getBoundingClientRect().height;
+                    let tipWidth = toolTipdiv.node().getBoundingClientRect().width;
+                    let tipX = toolTipdiv.node().getBoundingClientRect().x;
+                    let tipY = toolTipdiv.node().getBoundingClientRect().y;
+                    let circleX = d3.select(this).node().getBoundingClientRect().x;
+                    let circleY = d3.select(this).node().getBoundingClientRect().y;
+                    console.log(svgX, svgY, tipX, tipY, circleX, circleY);
+                    toolTipdiv.style('left', `${circleX-(tipX/2)-(tipWidth/2)}px`).style('top', `${circleY-tipY-tipHeight-15}px`)
 
                 })
-                .on('mousemover', function(){
-                    toolTipdiv.style('left', `${mouseX}px`)
-                              .style('top', `${mouseY}px`);
-                })
+                // .on('mousemove', function(){
+                //     toolTipdiv.style('left', `${mouseX}px`)
+                //               .style('top', `${mouseY}px`);
+                // })
                 .on('mouseout', function(){
+                    d3.select(this).attr('r', 4);
                     toolTipdiv.style('display', 'none');
-                    toolTipdiv.select('*').remove();
-                });
+                    toolTipdiv.selectAll('div').remove();
+                })
+                .transition().duration(2000)
+                .attr("cx", function(d) { return xScale(d.x); })
+                .attr("cy", function(d) { return yScale(d.y); });
 
             scatterFigure.transition().duration(750)
                 .attr("fill", color[0])

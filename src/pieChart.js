@@ -18,8 +18,8 @@ const pieChart = function() {
 
     // Customisable chart properties
     let data = [];
-    let height = '80vh';
-    let width = '80vw';
+    let height = '100%';
+    let width = '100%';
     let piePosition = 'center'; //['left', 'right', 'center']
     let color = colorPalette(19, 700);
 

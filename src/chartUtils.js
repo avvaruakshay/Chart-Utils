@@ -376,6 +376,7 @@ const axis = function(Obj) {
     let ticks;
     const scale = Obj.scale;
     const orient = (Obj.orient) ? Obj.orient : 'left';
+    const style = Obj.style ? Obj.style : 'default';
 
     // Orientation of axis
     if (orient === 'bottom') { axis = d3.axisBottom(scale); } else if (orient === 'top') { axis = d3.axisTop(scale); } else if (orient === 'left') { axis = d3.axisLeft(scale); } else if (orient === 'right') { axis = d3.axisRight(scale); }

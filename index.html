@@ -3,14 +3,12 @@
 <html>
 
 <head>
-    <title>Demo</title>
-    <link href="https://fonts.googleapis.com/css?family=Ubuntu" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.rawgit.com/Chalarangelo/mini.css/v2.3.6/dist/mini-default.min.css">
+    <title>Chart-utils Demo</title>
 </head>
 
 <body>
     <div class="hero">
-        <div class="hero-body">
+        <div class="hero-body" style="padding-top: 20px; padding-bottom: 20px; background: #ededed;">
             <div class="container">
                 <h1 class="title">Chart Utils</h1>
                 <h2 class="subtitle">Awesome JS charting library</h2>
@@ -18,9 +16,9 @@
         </div>
     </div>
 
-    <div class="columns" style="background: white; padding: 20px">
-        <div class="column container is-one-thirds">
-                <div class="tabs is-toggle is-right" style>
+    <div class="columns is-6" style="background: white; padding: 20px">
+        <div class="column container is-three-fifths">
+                <div class="tabs is-right is-toggle" style>
                     <ul>
                         <li class="is-active tab" id="bar"><a>Bar</a></li>
                         <li class="tab" id="scatter"><a>Scatter</a></li>
@@ -28,11 +26,12 @@
                         <li class="tab" id="pie"><a>Pie</a></li>
                         <li class="tab" id="box"><a>Box</a></li>
                         <li class="tab" id="histogram"><a>Histogram</a></li>
+                        <li class="tab" id="slate"><a>Slate</a></li>
                     </ul>
                 </div>
-                <center class="container" style="height: 80vh; border-radius: 10px" id="chart-area"></center>
+                <div style="height: 75vh; margin: auto" id="chart-area"></div>
         </div>
-        <div class="column is-two-thirds">
+        <div class="column is-two-fifths" style="border: 1px solid #cecece; border-radius: 10px">
             <div class="subtitle">Control header</div>
         </div>
     </div>
@@ -44,6 +43,33 @@
             font-family: 'Ubuntu', sans-serif !important;
         }
         
+        .the-tip {
+            background: #aeaeae;
+            font-size: 12px;
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 5px 5px 10px #eeeeee ;
+            opacity: 0.8;
+            border: #a8a8a8;
+            color: black;
+        }
+
+        .the-tip:after {
+            content: '';
+            position: relative;
+            display: block;
+            top: 17px;
+            width: 14.1px;
+            height: 14.1px;
+            -webkit-transform: rotate(45deg);
+            transform: rotate(45deg);
+            background: #aeaeae;
+            box-shadow: 5px 5px 10px #eeeeee ;
+            opacity: 0.8;
+            border: #a8a8a8;
+            margin: auto;
+        }
+
         .plot-tab {
             height: 100% !important;
         }
