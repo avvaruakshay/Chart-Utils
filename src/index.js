@@ -28,6 +28,31 @@ const plotChart = function(chartType){
             chartRoot.call(newBarChart);
         });
     }
+    else if (chartType === "stack") {
+        d3.tsv('../data/stack_data.tsv', function(data) {
+            let keys = _.uniq(_.map(data, d => { return d.repEnd; }));
+            data = _.map(data, o => {
+                o[o['repEnd']] = parseInt(o['freq']);
+                o['x'] = o['repLen'];
+                delete o['repEnd'];
+                delete o['freq'];
+                return o;
+            });
+            data = _.map(_.groupBy(data, o => { return o['repLen']; }), d => {
+                let obj = {};
+                for (let a in d) { a = d[a]; for (let b in a) { obj[b] = a[b]; } }
+                return obj;
+            });
+
+            const newStackedChart = stackChart().data(data).keys(keys)
+                                                .margin({ left: 60, top: 20, right: 20, bottom: 60 })
+                                                .xLabel('Repeat Length')
+                                                .yLabel('Frequency')
+                                                .labelDistance(20);
+
+            chartRoot.call(newStackedChart);
+        })
+    }
     else if (chartType === "scatter")  {
         d3.tsv( '../data/scatter_data.tsv', function(data) {
             const newScatterChart = scatterChart()
@@ -39,8 +64,9 @@ const plotChart = function(chartType){
             chartRoot.call(newScatterChart);
         })
     }
-    else if (chartType === "scatter")  {
-        d3.tsv('../data/BT.tsv', function(data) {
+    else if (chartType === "line")  {
+        d3.tsv('../data/line_data.tsv', function(data) {
+            console.log(data);
             let names = _.map(_.uniqBy(data, 'repClass'), o => { return o.repClass; });
             let units = (_.map(_.uniqBy(data, 'units'), o => { return parseInt(o.units); })).sort();
             data = _.map(names, o => { let values = _.map(_.filter(data, { repClass: o }), p => { return { x: parseInt(p.units), y: parseInt(p.freq) } }); return { name: o, values: values } });
@@ -77,7 +103,7 @@ d3.selectAll('.tab').on('click', function(){
     plotChart(chartType);
 })
 
-document.getElementById('scatter').click();
+document.getElementById('bar').click();
 
 
 
@@ -100,7 +126,31 @@ document.getElementById('scatter').click();
 
 
 
+// d3.tsv('../data/data.tsv', function(data) {
 
+//     let keys = _.uniq(_.map(data, d => { return d.repEnd; }));
+//     data = _.map(data, o => {
+//         o[o['repEnd']] = parseInt(o['freq']);
+//         o['x'] = o['repLen'];
+//         delete o['repEnd'];
+//         delete o['freq'];
+//         return o;
+//     });
+//     data = _.map(_.groupBy(data, o => { return o['repLen']; }), d => {
+//         let obj = {};
+//         for (let a in d) { a = d[a]; for (let b in a) { obj[b] = a[b]; } }
+//         return obj;
+//     });
+
+//     const stackchartRoot = d3.select('#stacked-main');
+//     const newStackedChart = stackChart().data(data).keys(keys)
+//         .margin({ left: 60, top: 20, right: 20, bottom: 60 })
+//         .xLabel('Repeat Length')
+//         .yLabel('Frequency')
+//         .labelDistance(20);
+
+//     stackchartRoot.call(newStackedChart);
+// })
 
 
 

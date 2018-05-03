@@ -55,6 +55,8 @@ const barChart = function() {
         let plotW = svgW - margin.left - margin.right; // Calculating the actual height of the plot
         let plotStartx = margin.left; // X-coordinate of the start of the plot
         let plotStarty = margin.top; // Y-coordinate of the start of the plot
+        const toolTipdiv = selection.append('div').attr('class', 'bartip')
+                                    .style('position', 'absolute');
 
         /* --  Defining the scale for X-axis ------------------------------------ */
         let xScale = scale({
@@ -158,6 +160,32 @@ const barChart = function() {
                 .attr('x', function(d) { return xScale(d.name) + xScale.bandwidth() / 2 - barWidth / 2; })
                 .attr('y', function(d) { return yScale(yMin); })
                 .attr('fill', d => { console.log(d.group); return color[d.group]; })
+                .on('mouseover', function(d){
+                    // console.log(this);
+                    toolTipdiv.style('display', 'block')
+                              .style('left', 0 + 'px')
+                              .style('top', 0 + 'px')
+                              .attr('class', 'the-tip')
+                              .html(`<span><b>${d.name}</b></span><br><span>${yLabel}: ${d.value}</span>`);
+                    let tipHeight = toolTipdiv.node().getBoundingClientRect().height;
+                    let tipWidth = toolTipdiv.node().getBoundingClientRect().width;
+                    let tipX = toolTipdiv.node().getBoundingClientRect().x;
+                    let tipY = toolTipdiv.node().getBoundingClientRect().y;
+                    let barX = d3.select(this).node().getBoundingClientRect().x;
+                    let barY = d3.select(this).node().getBoundingClientRect().y;
+                    let barW = d3.select(this).node().getBoundingClientRect().width;
+                    toolTipdiv.style('left', `${barX-(tipX)-(tipWidth/4)-5}px`).style('top', `${barY-tipY-tipHeight-15}px`)
+
+                })
+                // .on('mousemove', function(){
+                //     toolTipdiv.style('left', `${mouseX}px`)
+                //               .style('top', `${mouseY}px`);
+                // })
+                .on('mouseout', function(){
+                    // d3.select(this).attr('r', 4);
+                    toolTipdiv.style('display', 'none');
+                    toolTipdiv.selectAll('div').remove();
+                })
                 .transition()
                 .duration(duration)
                 .attr('y', function(d) { return yScale(d.value); })

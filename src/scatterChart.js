@@ -157,11 +157,6 @@ const scatterChart = function(Obj) {
                 .on('mouseover', function(d){
                     // console.log(this);
                     d3.select(this).attr('r', '6');
-                    let cx = d3.select(this).attr('cx');
-                    let cy = d3.select(this).attr('cy');
-                    console.log(cx, cy);
-                    let mouseX = event.clientX;
-                    let mouseY = event.clientY;
                     toolTipdiv.style('display', 'block')
                               .style('left', 0 + 'px')
                               .style('top', 0 + 'px')

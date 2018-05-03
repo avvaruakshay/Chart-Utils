@@ -59,7 +59,7 @@
 /******/ 	
 /******/ 	
 /******/ 	var hotApplyOnUpdate = true;
-/******/ 	var hotCurrentHash = "e7df3480736beeee0078"; // eslint-disable-line no-unused-vars
+/******/ 	var hotCurrentHash = "7473abaa226209d3186a"; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule; // eslint-disable-line no-unused-vars
 /******/ 	var hotCurrentParents = []; // eslint-disable-line no-unused-vars
@@ -28814,6 +28814,7 @@ const barChart = function () {
         let plotW = svgW - margin.left - margin.right; // Calculating the actual height of the plot
         let plotStartx = margin.left; // X-coordinate of the start of the plot
         let plotStarty = margin.top; // Y-coordinate of the start of the plot
+        const toolTipdiv = selection.append('div').attr('class', 'bartip').style('position', 'absolute');
 
         /* --  Defining the scale for X-axis ------------------------------------ */
         let xScale = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__chartUtils_js__["b" /* scale */])({
@@ -28918,6 +28919,26 @@ const barChart = function () {
                 return yScale(yMin);
             }).attr('fill', d => {
                 console.log(d.group);return color[d.group];
+            }).on('mouseover', function (d) {
+                // console.log(this);
+                toolTipdiv.style('display', 'block').style('left', 0 + 'px').style('top', 0 + 'px').attr('class', 'the-tip').html(`<span><b>${d.name}</b></span><br><span>${yLabel}: ${d.value}</span>`);
+                let tipHeight = toolTipdiv.node().getBoundingClientRect().height;
+                let tipWidth = toolTipdiv.node().getBoundingClientRect().width;
+                let tipX = toolTipdiv.node().getBoundingClientRect().x;
+                let tipY = toolTipdiv.node().getBoundingClientRect().y;
+                let barX = d3.select(this).node().getBoundingClientRect().x;
+                let barY = d3.select(this).node().getBoundingClientRect().y;
+                let barW = d3.select(this).node().getBoundingClientRect().width;
+                toolTipdiv.style('left', `${barX - tipX - tipWidth / 4 - 5}px`).style('top', `${barY - tipY - tipHeight - 15}px`);
+            })
+            // .on('mousemove', function(){
+            //     toolTipdiv.style('left', `${mouseX}px`)
+            //               .style('top', `${mouseY}px`);
+            // })
+            .on('mouseout', function () {
+                // d3.select(this).attr('r', 4);
+                toolTipdiv.style('display', 'none');
+                toolTipdiv.selectAll('div').remove();
             }).transition().duration(duration).attr('y', function (d) {
                 return yScale(d.value);
             }).attr('height', function (d) {
@@ -29100,8 +29121,8 @@ const multilineChart = function () {
     let data = [];
     let x = 'x';
     let y = 'y';
-    let width = '80vw';
-    let height = '80vh';
+    let width = '100%';
+    let height = '100%';
     let margin = { top: 20, right: 20, bottom: 40, left: 40 };
 
     let xLabel = 'X-axis';
@@ -30003,11 +30024,6 @@ const scatterChart = function (Obj) {
             }).style('opacity', 0.7).on('mouseover', function (d) {
                 // console.log(this);
                 d3.select(this).attr('r', '6');
-                let cx = d3.select(this).attr('cx');
-                let cy = d3.select(this).attr('cy');
-                console.log(cx, cy);
-                let mouseX = event.clientX;
-                let mouseY = event.clientY;
                 toolTipdiv.style('display', 'block').style('left', 0 + 'px').style('top', 0 + 'px').attr('class', 'the-tip').html(`<span><b>${d.name}</b></span><br><span>${xLabel}: ${d.x}</span><br><span>${yLabel}: ${d.y}</span>`);
                 let tipHeight = toolTipdiv.node().getBoundingClientRect().height;
                 let tipWidth = toolTipdiv.node().getBoundingClientRect().width;
@@ -30150,7 +30166,7 @@ const scatterChart = function (Obj) {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* unused harmony export stackChart */
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return stackChart; });
 /* unused harmony export stackData */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__chartUtils_js__ = __webpack_require__(24);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__tooltip_js__ = __webpack_require__(187);
@@ -30174,8 +30190,8 @@ const stackChart = function () {
     let data = [];
     let keys;
     let x = 'x';
-    let width = '80vw';
-    let height = '80vh';
+    let width = '100%';
+    let height = '100%';
     let margin = { top: 20, right: 20, bottom: 40, left: 40 };
 
     // Inplot customizable options
@@ -30618,14 +30634,43 @@ const plotChart = function (chartType) {
             const newBarChart = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_5__barChart_js__["a" /* barChart */])().data(data).margin({ top: 40, bottom: 60, left: 80, right: 30 }).xLabel('Repeats').yLabel('Abundance');
             chartRoot.call(newBarChart);
         });
+    } else if (chartType === "stack") {
+        d3.tsv('../data/stack_data.tsv', function (data) {
+            let keys = _.uniq(_.map(data, d => {
+                return d.repEnd;
+            }));
+            data = _.map(data, o => {
+                o[o['repEnd']] = parseInt(o['freq']);
+                o['x'] = o['repLen'];
+                delete o['repEnd'];
+                delete o['freq'];
+                return o;
+            });
+            data = _.map(_.groupBy(data, o => {
+                return o['repLen'];
+            }), d => {
+                let obj = {};
+                for (let a in d) {
+                    a = d[a];for (let b in a) {
+                        obj[b] = a[b];
+                    }
+                }
+                return obj;
+            });
+
+            const newStackedChart = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__stackChart_js__["a" /* stackChart */])().data(data).keys(keys).margin({ left: 60, top: 20, right: 20, bottom: 60 }).xLabel('Repeat Length').yLabel('Frequency').labelDistance(20);
+
+            chartRoot.call(newStackedChart);
+        });
     } else if (chartType === "scatter") {
         d3.tsv('../data/scatter_data.tsv', function (data) {
             const newScatterChart = __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_4__scatterChart_js__["a" /* scatterChart */])().margin({ top: 40, left: 80, right: 40, bottom: 80 }).data(data).xLabel('Genome size(MB)').yLabel('SSR density');
 
             chartRoot.call(newScatterChart);
         });
-    } else if (chartType === "scatter") {
-        d3.tsv('../data/BT.tsv', function (data) {
+    } else if (chartType === "line") {
+        d3.tsv('../data/line_data.tsv', function (data) {
+            console.log(data);
             let names = _.map(_.uniqBy(data, 'repClass'), o => {
                 return o.repClass;
             });
@@ -30667,7 +30712,34 @@ d3.selectAll('.tab').on('click', function () {
     plotChart(chartType);
 });
 
-document.getElementById('scatter').click();
+document.getElementById('bar').click();
+
+// d3.tsv('../data/data.tsv', function(data) {
+
+//     let keys = _.uniq(_.map(data, d => { return d.repEnd; }));
+//     data = _.map(data, o => {
+//         o[o['repEnd']] = parseInt(o['freq']);
+//         o['x'] = o['repLen'];
+//         delete o['repEnd'];
+//         delete o['freq'];
+//         return o;
+//     });
+//     data = _.map(_.groupBy(data, o => { return o['repLen']; }), d => {
+//         let obj = {};
+//         for (let a in d) { a = d[a]; for (let b in a) { obj[b] = a[b]; } }
+//         return obj;
+//     });
+
+//     const stackchartRoot = d3.select('#stacked-main');
+//     const newStackedChart = stackChart().data(data).keys(keys)
+//         .margin({ left: 60, top: 20, right: 20, bottom: 60 })
+//         .xLabel('Repeat Length')
+//         .yLabel('Frequency')
+//         .labelDistance(20);
+
+//     stackchartRoot.call(newStackedChart);
+// })
+
 
 /* Trial stack bar chart */
 // d3.tsv('../data/data.tsv', function(data) {

@@ -18,8 +18,8 @@ const stackChart = function() {
     let data = [];
     let keys;
     let x = 'x';
-    let width = '80vw';
-    let height = '80vh';
+    let width = '100%';
+    let height = '100%';
     let margin = { top: 20, right: 20, bottom: 40, left: 40 };
 
     // Inplot customizable options
