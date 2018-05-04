@@ -22,22 +22,30 @@
             <div class="column is-parent is-vertical is-narrow" id="left-panel">
                 <div class="work-panel is-child tile" id="data-panel">
                     <div id="data-box">
-                        <div class="file">
+                        <div class="file has-name" style="height: 20%;">
                             <label class="file-label">
-                                <input class="file-input" type="file" name="resume">
+                                <input class="file-input" type="file" id="file-upload">
                                 <span class="file-cta">
-                                <span class="file-icon">
-                                    <i class="fas fa-upload"></i>
+                                    <span class="file-icon">
+                                        <i class="fas fa-upload"></i>
+                                    </span>
+                                    <span class="file-label">
+                                        Choose a file…
+                                    </span>
                                 </span>
-                                <span class="file-label">
-                                    Choose a file.....
-                                </span>
+                                <span class="file-name">
+                                    Not Selected
                                 </span>
                             </label>
                         </div>
+                        <div style="height: 80%; overflow-y: auto">
+                            <table id="data-table" class="table is-hoverable is-fullwidth">
+                                <tbody id="data-tbody"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
-                <button id="data-sep-chart"></button>
+                <span><button id="data-sep-chart"></button></span>
                 <div class="tile is-child work-panel" id="chart-panel">
                     <div class="tabs is-right is-toggle">
                         <ul>

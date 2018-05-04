@@ -16,6 +16,35 @@ import { getUniqueElements, getMatchingRows } from './utils.js'
 import { drawSlate } from './drawSlate.js'
 
 
+const parseFile = function(){
+    let name = this.files[0].name;
+    d3.select('.file-name').html(name)
+    let reader = new FileReader()
+    reader.onload = function(e) {
+        let text = reader.result;
+        const tableData = d3.tsvParseRows(text);
+        d3.select('#data-table').append('thead').append('tr').html(function(){
+            let html = '';
+            for (let i=0; i < tableData[0].length; i++) { html += `<th title="${tableData[0][i]}">${tableData[0][i]}</th>`; }
+            return html;
+        })
+        const tableRows = d3.select('#data-tbody').selectAll('tr')
+          .data(tableData.splice(1,tableData.length))
+          .enter()
+          .append('tr')
+          .html(function(d){
+              console.log(d);
+              let html = '';
+              for (let i=0; i < d.length; i++) { html += `<td title="${d[i]}">${d[i]}</td>`; }
+              return html;
+          });
+
+    }
+    reader.readAsText(this.files[0]);
+}
+
+d3.select("#file-upload").on('change', parseFile);
+
 let sepY;
 let dataH;
 let chartH;
@@ -28,13 +57,16 @@ d3.select('#data-sep-chart')
         mouseY = event.clientY;
         console.log(sepY, dataH, mouseY);
         d3.select('body').on('mousemove', function(){
-            d3.select('#data-box').style('height', `${dataH - mouseY + event.clientY}px`);
-            d3.select('#chart-area').style('height', `${chartH + mouseY - event.clientY}px`);
+                d3.select('#data-box').style('height', `${dataH - mouseY + event.clientY}px`);
+                d3.select('#chart-area').style('height', `${chartH + mouseY - event.clientY}px`);
         })
   })
   .on('mouseup', function(){
     d3.select('body').on('mousemove', function(){})
   })
+//   .on('mouseout', function(){
+//     d3.select('body').on('mousemove', function(){})
+//   })
 
 let sepX;
 let leftW;
