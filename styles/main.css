@@ -1,0 +1,80 @@
+@import url("https://use.fontawesome.com/releases/v5.0.12/css/all.css");
+
+body {
+    font-family: 'Ubuntu', sans-serif !important;
+}
+
+.work-panel {
+    border: 2px solid black;
+    border-radius: 5px;
+    padding: 15px
+}
+
+#left-panel {
+    width: 50vw;
+    max-width: 80vw;
+}
+
+#chart-panel {
+    height: 50vh;
+    border-color: #FD3A61;
+}
+
+#data-panel {
+    border-color: #279DEA;
+}
+
+#data-box {
+    height: 200px;
+}
+
+#control-panel {
+    border-color: #20D0B2;
+}
+
+#data-sep-chart:hover {
+    cursor: row-resize;
+}
+
+#data-sep-chart {
+    margin-bottom: 10px;
+    margin-top: 10px;
+    width: 100%;
+}
+
+#left-sep-right {
+    padding-left: 1px;
+    padding-right: 1px;
+    margin-right: 10px;
+}
+
+#left-sep-right:hover {
+    cursor: col-resize;
+}
+
+.the-tip {
+    background: #aeaeae;
+    font-size: 12px;
+    padding: 10px;
+    border-radius: 4px;
+    box-shadow: 5px 5px 10px #eeeeee ;
+    opacity: 0.8;
+    border: #a8a8a8;
+    color: black;
+}
+
+.the-tip:after {
+    content: '';
+    position: relative;
+    display: block;
+    top: 17px;
+    width: 14.1px;
+    height: 14.1px;
+    -webkit-transform: rotate(45deg);
+    transform: rotate(45deg);
+    background: #aeaeae;
+    box-shadow: 5px 5px 10px #eeeeee ;
+    opacity: 0.8;
+    border: #a8a8a8;
+    margin: auto;
+}

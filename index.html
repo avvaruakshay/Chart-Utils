@@ -4,6 +4,7 @@
 
 <head>
     <title>Chart-utils Demo</title>
+    <link rel="stylesheet" href="dist/styles.css">
 </head>
 
 <body>
@@ -16,147 +17,51 @@
         </div>
     </div>
 
-    <div class="columns is-6" style="background: white; padding: 20px">
-        <div class="column container is-three-fifths">
-                <div class="tabs is-right is-toggle" style>
-                    <ul>
-                        <li class="is-active tab" id="bar"><a>Bar</a></li>
-                        <li class="tab" id="stack"><a>Stack</a></li>
-                        <li class="tab" id="scatter"><a>Scatter</a></li>
-                        <li class="tab" id="line"><a>Line</a></li>
-                        <li class="tab" id="pie"><a>Pie</a></li>
-                        <li class="tab" id="box"><a>Box</a></li>
-                        <li class="tab" id="histogram"><a>Histogram</a></li>
-                        <li class="tab" id="slate"><a>Slate</a></li>
-                    </ul>
+    <div style="background: white; padding: 20px">
+        <div class="columns is-ancestor">
+            <div class="column is-parent is-vertical is-narrow" id="left-panel">
+                <div class="work-panel is-child tile" id="data-panel">
+                    <div id="data-box">
+                        <div class="file">
+                            <label class="file-label">
+                                <input class="file-input" type="file" name="resume">
+                                <span class="file-cta">
+                                <span class="file-icon">
+                                    <i class="fas fa-upload"></i>
+                                </span>
+                                <span class="file-label">
+                                    Choose a file.....
+                                </span>
+                                </span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
-                <div style="height: 75vh; margin: auto" id="chart-area"></div>
-        </div>
-        <div class="column is-two-fifths" style="border: 1px solid #cecece; border-radius: 10px">
-            <div class="subtitle">Control header</div>
+                <button id="data-sep-chart"></button>
+                <div class="tile is-child work-panel" id="chart-panel">
+                    <div class="tabs is-right is-toggle">
+                        <ul>
+                            <li class="is-active tab" id="bar"><a>Bar</a></li>
+                            <li class="tab" id="stack"><a>Stack</a></li>
+                            <li class="tab" id="scatter"><a>Scatter</a></li>
+                            <li class="tab" id="line"><a>Line</a></li>
+                            <li class="tab" id="pie"><a>Pie</a></li>
+                            <li class="tab" id="box"><a>Box</a></li>
+                            <li class="tab" id="histogram"><a>Histogram</a></li>
+                            <li class="tab" id="slate"><a>Slate</a></l>
+                        </ul>
+                    </div>
+                    <div style="height: 90%; margin: auto; width: 90%" id="chart-area"></div>
+                </div>
+            </div>
+            <button id="left-sep-right"></button>
+            <div class="column work-panel is-parent" id="control-panel">
+                <div class="subtitle">Control header</div>
+            </div>
         </div>
     </div>
 
     <script src="./dist/bundle.js"></script>
-
-    <style>
-        body {
-            font-family: 'Ubuntu', sans-serif !important;
-        }
-        
-        .the-tip {
-            background: #aeaeae;
-            font-size: 12px;
-            padding: 10px;
-            border-radius: 4px;
-            box-shadow: 5px 5px 10px #eeeeee ;
-            opacity: 0.8;
-            border: #a8a8a8;
-            color: black;
-        }
-
-        .the-tip:after {
-            content: '';
-            position: relative;
-            display: block;
-            top: 17px;
-            width: 14.1px;
-            height: 14.1px;
-            -webkit-transform: rotate(45deg);
-            transform: rotate(45deg);
-            background: #aeaeae;
-            box-shadow: 5px 5px 10px #eeeeee ;
-            opacity: 0.8;
-            border: #a8a8a8;
-            margin: auto;
-        }
-
-        .plot-tab {
-            height: 100% !important;
-        }
-        
-        #main {
-            height: 89vh;
-            width: 90vw;
-            border-radius: 10px;
-            border: 1px#bebebe solid;
-            padding: 20px;
-        }
-        
-        .tooltip.pointer {
-            position: absolute;
-            padding: 12px;
-            /* margin: 1em 0 2em; */
-            border: 1px solid #5a8f00;
-            color: #333;
-            background: #fff;
-            border-radius: 10px;
-            display: none;
-            text-align: left;
-            box-shadow: 5px 5px 6px -6px black;
-        }
-        
-        .tooltip.pointer:before {
-            content: "";
-            position: absolute;
-            bottom: -10px;
-            left: 40px;
-            border-width: 10px 10px 0;
-            border-style: solid;
-            border-color: #5a8f00 transparent;
-            display: block;
-            width: 0;
-        }
-        
-        .tooltip.pointer:after {
-            content: "";
-            position: absolute;
-            bottom: -9px;
-            left: 39px;
-            border-width: 10px 10px 0;
-            border-style: solid;
-            border-color: #fff transparent;
-            display: block;
-            width: 0;
-        }
-        
-        .tooltip.default {
-            text-align: left;
-            background-color: white;
-            padding: 12px;
-            border-radius: 0.25em;
-            border: 1px solid #aeaeae;
-            box-shadow: 0px 8px 6px -6px black;
-            color: black;
-            position: absolute;
-            display: none;
-        }
-        
-        .tooltip .header {
-            font-size: 12px;
-            font-weight: bold;
-        }
-        
-        .tooltip .divider {
-            background-color: #eeeeee;
-            width: 100%;
-            margin-top: 4px;
-            margin-bottom: 4px;
-        }
-        
-        .tooltip .prop {
-            font-size: 12px;
-            padding-bottom: 2px;
-        }
-        
-        .tooltip .icon {
-            display: inline-block;
-            border-radius: 50%;
-            width: 10px;
-            height: 10px;
-            margin-right: 4px;
-        }
-    </style>
 
 </body>
 

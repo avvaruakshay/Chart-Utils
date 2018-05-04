@@ -5,6 +5,7 @@ const d3 = require("d3")
 
 //styles
 import '../node_modules/bulma/css/bulma.min.css'
+import '../styles/main.css'
 
 import { stackData, stackChart } from './stackChart.js'
 import { lineDatum, multilineChart } from './lineChart.js'
@@ -13,6 +14,46 @@ import { scatterChart } from './scatterChart.js'
 import { barChart } from './barChart.js'
 import { getUniqueElements, getMatchingRows } from './utils.js'
 import { drawSlate } from './drawSlate.js'
+
+
+let sepY;
+let dataH;
+let chartH;
+let mouseY;
+d3.select('#data-sep-chart')
+  .on('mousedown', function(d){
+        sepY = d3.select(this).node().getBoundingClientRect().y;
+        dataH = d3.select('#data-box').node().getBoundingClientRect().height;
+        chartH = d3.select('#chart-area').node().getBoundingClientRect().height;
+        mouseY = event.clientY;
+        console.log(sepY, dataH, mouseY);
+        d3.select('body').on('mousemove', function(){
+            d3.select('#data-box').style('height', `${dataH - mouseY + event.clientY}px`);
+            d3.select('#chart-area').style('height', `${chartH + mouseY - event.clientY}px`);
+        })
+  })
+  .on('mouseup', function(){
+    d3.select('body').on('mousemove', function(){})
+  })
+
+let sepX;
+let leftW;
+let mouseX;
+d3.select("#left-sep-right")
+  .on('mousedown', function(d){
+        sepX = d3.select(this).node().getBoundingClientRect().x;
+        leftW = d3.select('#left-panel').node().getBoundingClientRect().width;
+        // chartH = d3.select('#chart-area').node().getBoundingClientRect().height;
+        mouseX = event.clientX;
+        console.log(sepX, leftW, mouseX);
+        d3.select('body').on('mousemove', function(){
+            d3.select('#left-panel').style('width', `${leftW - mouseX + event.clientX}px`);
+            // d3.select('#chart-area').style('height', `${chartH + mouseY - event.clientY}px`);
+        })
+  })
+  .on('mouseup', function(){
+    d3.select('body').on('mousemove', function(){})
+  })
 
 const plotChart = function(chartType){
     const chartRoot = d3.select('#chart-area');
