@@ -4,52 +4,30 @@ body {
     font-family: 'Ubuntu', sans-serif !important;
 }
 
-.work-panel {
-    border: 2px solid black;
-    border-radius: 5px;
-    padding: 15px
-}
-
 #left-panel {
-    width: 50vw;
+    width: 40vw;
     max-width: 80vw;
     padding-left: 5px;
+    height: 100%;
 }
 
 #chart-panel {
-    height: 50vh;
+    height: 100%;
     border-color: #FD3A61;
+    margin-top: 10px;
 }
 
-#data-panel {
-    border-color: #279DEA;
-}
-
-#data-box {
-    height: 200px;
-    min-height: 100px;
-}
-
-#control-panel {
-    border-color: #20D0B2;
-}
-
-#data-sep-chart:hover {
-    cursor: row-resize;
-}
-
-#data-sep-chart {
-    /* margin-bottom: 8px;
-    margin-top: 5px; */
-    width: 100%;   
-    padding-top: 0.5px;
-    padding-bottom: 0.5px;
+.accordion-content {
+    background: white;
 }
 
 #left-sep-right {
     padding-left: 0.5px;
     padding-right: 0.5px;
     margin-right: 8px;
+    margin-top: 15%;
+    height: 100px;
+    background: black;
 }
 
 #left-sep-right:hover {
@@ -57,28 +35,35 @@ body {
 }
 
 .the-tip {
-    background: #aeaeae;
+    background: #222222;
     font-size: 12px;
-    padding: 10px;
+    padding: 6px;
     border-radius: 4px;
-    box-shadow: 5px 5px 10px #eeeeee ;
+    /* box-shadow: 5px 5px 10px #eeeeee ; */
     opacity: 0.8;
-    border: #a8a8a8;
-    color: black;
+    /* border: #a8a8a8; */
+    color: white;
 }
 
 .the-tip:after {
     content: '';
     position: relative;
     display: block;
-    top: 17px;
+    top: 12px;
     width: 14.1px;
     height: 14.1px;
     -webkit-transform: rotate(45deg);
     transform: rotate(45deg);
-    background: #aeaeae;
-    box-shadow: 5px 5px 10px #eeeeee ;
+    background: #222222;
+    /* box-shadow: 5px 5px 10px #eeeeee ; */
     opacity: 0.8;
-    border: #a8a8a8;
+    /* border: #a8a8a8; */
     margin: auto;
+}
+
+.square-tip {
+    height: 10px;
+    width: 10px;
+    display: inline-block;
+    margin-right: 4px;
 }

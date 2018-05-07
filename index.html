@@ -8,7 +8,7 @@
 </head>
 
 <body>
-    <div class="hero">
+    <div class="hero" id="page-header">
         <div class="hero-body" style="padding-top: 20px; padding-bottom: 20px; background: #ededed;">
             <div class="container">
                 <h1 class="title">Chart Utils</h1>
@@ -17,54 +17,71 @@
         </div>
     </div>
 
-    <div style="background: white; padding: 20px">
-        <div class="columns is-ancestor">
-            <div class="column is-parent is-vertical is-narrow" id="left-panel">
-                <div class="work-panel is-child tile" id="data-panel">
-                    <div id="data-box">
-                        <div class="file has-name" style="height: 20%;">
-                            <label class="file-label">
-                                <input class="file-input" type="file" id="file-upload">
-                                <span class="file-cta">
-                                    <span class="file-icon">
-                                        <i class="fas fa-upload"></i>
-                                    </span>
-                                    <span class="file-label">
-                                        Choose a file…
-                                    </span>
-                                </span>
-                                <span class="file-name">
-                                    Not Selected
-                                </span>
-                            </label>
+    <div style="background: white; padding: 20px; height: 90vh;">
+        <div class="columns is-ancestor" style="height: 100%">
+            <div class="column is-narrow" id="left-panel">
+                <section class="accordions">
+                    <article class="accordion is-active">
+                        <div class="accordion-header">
+                        <p>Data</p>
+                        <button class="toggle" aria-label="toggle"></button>
                         </div>
-                        <div style="height: 80%; overflow-y: auto">
-                            <table id="data-table" class="table is-hoverable is-fullwidth">
-                                <tbody id="data-tbody"></tbody>
-                            </table>
+                        <div class="accordion-body">
+                            <div class="accordion-content">
+                                <div class="file has-name">
+                                    <label class="file-label">
+                                        <input class="file-input" type="file" id="file-upload">
+                                        <span class="file-cta">
+                                            <span class="file-icon">
+                                                <i class="fas fa-upload"></i>
+                                            </span>
+                                            <span class="file-label">
+                                                Choose a file…
+                                            </span>
+                                        </span>
+                                        <span class="file-name" style="background: white">
+                                            Not Selected
+                                        </span>
+                                    </label>
+                                    <button class="button is-success is-right" style="float: right; margin-left: 50px">Select data</button>
+                                </div>
+                                <div id="table-div" style="overflow-y: auto; padding: 20px; max-height: 70vh;">
+                                    <table id="data-table" class="table is-bordered is-hoverable is-fullwidth" style="border-radius: 10px">
+                                    </table>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
-                <span><button id="data-sep-chart"></button></span>
-                <div class="tile is-child work-panel" id="chart-panel">
-                    <div class="tabs is-right is-toggle">
-                        <ul>
-                            <li class="is-active tab" id="bar"><a>Bar</a></li>
-                            <li class="tab" id="stack"><a>Stack</a></li>
-                            <li class="tab" id="scatter"><a>Scatter</a></li>
-                            <li class="tab" id="line"><a>Line</a></li>
-                            <li class="tab" id="pie"><a>Pie</a></li>
-                            <li class="tab" id="box"><a>Box</a></li>
-                            <li class="tab" id="histogram"><a>Histogram</a></li>
-                            <li class="tab" id="slate"><a>Slate</a></l>
-                        </ul>
-                    </div>
-                    <div style="height: 90%; margin: auto; width: 90%" id="chart-area"></div>
-                </div>
+                    </article>
+                    <article class="accordion">
+                        <div class="accordion-header">
+                        <p>Control Panel</p>
+                        <button class="toggle" aria-label="toggle"></button>
+                        </div>
+                        <div class="accordion-body">
+                        <div class="accordion-content">
+                            <div class="subtitle">Control header</div>
+                        </div>
+                        </div>
+                    </article>
+                </section>
             </div>
+
             <button id="left-sep-right"></button>
-            <div class="column work-panel is-parent" id="control-panel">
-                <div class="subtitle">Control header</div>
+            
+            <div class="column is-parent" id="chart-panel">
+                <div class="tabs is-right is-toggle">
+                    <ul>
+                        <li class="is-active tab" id="bar"><a>Bar</a></li>
+                        <li class="tab" id="stack"><a>Stack</a></li>
+                        <li class="tab" id="scatter"><a>Scatter</a></li>
+                        <li class="tab" id="line"><a>Line</a></li>
+                        <li class="tab" id="pie"><a>Pie</a></li>
+                        <li class="tab" id="box"><a>Box</a></li>
+                        <li class="tab" id="histogram"><a>Histogram</a></li>
+                        <li class="tab" id="slate"><a>Slate</a></l>
+                    </ul>
+                </div>
+                <div style="height: 90%; margin: auto; width: 90%" id="chart-area"></div>
             </div>
         </div>
     </div>

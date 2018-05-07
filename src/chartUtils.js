@@ -372,8 +372,10 @@ const scale = function(Obj) {
 
 const axis = function(Obj) {
 
+    console.log('Axis function called!');
     let axis;
     let ticks;
+    let tickSize;
     const scale = Obj.scale;
     const orient = (Obj.orient) ? Obj.orient : 'left';
     const style = Obj.style ? Obj.style : 'default';
@@ -401,6 +403,11 @@ const axis = function(Obj) {
             })
 
         }
+    }
+
+    if (Obj.hasOwnProperty('tickSize')) {
+        tickSize = Obj['tickSize'];
+        axis = axis.tickSize(tickSize);
     }
 
     return axis;
@@ -438,7 +445,7 @@ const axislabel = function(Obj) {
     // else if (side === 'inside') {padding = -distance;}
 
     if (axisOrient === 'left') {
-        translateX = translate[0] - axisbox.width - distance;
+        translateX = translate[0] - distance;
         translateY = translate[1] + axisbox.height / 2 + axisbox.y;
         rotate = -90;
     } else if (axisOrient === 'right') {
@@ -447,11 +454,11 @@ const axislabel = function(Obj) {
         rotate = -90;
     } else if (axisOrient === 'top') {
         translateX = translate[0] + axisbox.width / 2 + axisbox.x;
-        translateY = translate[1] - axisbox.height - distance;
+        translateY = translate[1] - distance;
         rotate = 0;
     } else if (axisOrient === 'bottom') {
         translateX = translate[0] + axisbox.width / 2 + axisbox.x;
-        translateY = translate[1] + axisbox.height + distance;
+        translateY = translate[1] + distance;
         rotate = 0;
     }
 

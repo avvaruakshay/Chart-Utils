@@ -31,8 +31,8 @@ const scatterChart = function(Obj) {
     let xLabel = 'X-axis';
     let yLabel = 'Y-axis';
     let windowResize = true;
-    let xlabelDistance = 20;
-    let ylabelDistance = 20;
+    let xlabelDistance = 40;
+    let ylabelDistance = 40;
 
     let xMax, xMin, yMax, yMin;
 
@@ -92,8 +92,8 @@ const scatterChart = function(Obj) {
             
             svg.select('.scatter.x.axis').call(xAxis);
             svg.select('.scatter.y.axis').call(yAxis);
-
             svg.selectAll('.axislabel').remove();
+
             /* -- Adding X-axis label ----------------------------------------------- */
             if (xLabel) {
                 axislabel({

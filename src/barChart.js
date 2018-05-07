@@ -25,8 +25,8 @@ const barChart = function() {
     let xLabel = "X-axis";
     let yLabel = "Y-axis";
     let windowResize = true;
-    let xlabelDistance = 20;
-    let ylabelDistance = 20;
+    let xlabelDistance = 40;
+    let ylabelDistance = 40;
 
     let chart = function(selection) {
 
@@ -44,8 +44,7 @@ const barChart = function() {
             let colors = colorPalette(groups.length, 500);
             for (let i in groups) { color[groups[i]] = colors[i]; }
         }
-        data = _.map(data, d => { d.view = 1; return d; })
-        console.log(data);
+        data = _.map(data, d => { d.view = 1; return d; });
 
         let yMax = _.max(_.map(data, d => { return d.value }));
         let yMin = _.min(_.map(data, d => { return d.value }));
@@ -89,7 +88,8 @@ const barChart = function() {
         let yAxis = axis({
             scale: yScale,
             ticks: 4,
-            tickformat: 'thousands'
+            tickformat: 'thousands',
+            tickSize: -(plotW)
         });
 
         let yAxisElement = svg.append('g')
@@ -101,7 +101,6 @@ const barChart = function() {
 
         const draw = function() {
             duration = 1000;
-            let currentPlotData = _.filter(data, o => { return o.view == 1; })
 
             svg.select('.bar.x.axis').call(xAxis);
             svg.select('.bar.y.axis').call(yAxis);
@@ -133,63 +132,74 @@ const barChart = function() {
                 });
             }
 
-            let barWidth;
-            if (xScale.bandwidth() <= 100) {
-                barWidth = xScale.bandwidth();
-            } else { barWidth = 100; }
+            const plotCurrentData = function() {
+                let currentData = _.filter(data, o => { return o.view = 1 });
 
-            /* -- Plotting the BARS ------------------------------------------------- */
+                let yMax = _.max(_.map(currentData, d => { return d.value }));
+                let yMin = _.min(_.map(currentData, d => { return d.value }));
+                xticks = _.map(currentData, o => { return o.name });
+                xScale.domain(xticks);
+                yScale.domain([yMin, yMax]);
+                svg.select('.bar.x.axis').call(xAxis)
+                svg.select('.bar.y.axis').call(yAxis);
 
-            const barFigure = plotCanvas.selectAll('rect').data(currentPlotData);
+                let barWidth;
+                if (xScale.bandwidth() <= 100) {
+                    barWidth = xScale.bandwidth();
+                } else { barWidth = 100; }
+    
+                /* -- Plotting the BARS ------------------------------------------------- */
+    
+                const barFigure = plotCanvas.selectAll('rect').data(currentData);
+    
+                barFigure.exit().transition().duration(100).remove();
+    
+                barFigure.attr('width', barWidth)
+                    .attr('x', function(d) { return xScale(d.name) + xScale.bandwidth() / 2 - barWidth / 2; })
+                    .attr('y', function(d) { return yScale(yMin); })
+                    .attr('fill', d => { return color[d.group]; })
+                    .transition()
+                    .duration(duration)
+                    .attr('y', function(d) { return yScale(d.value); })
+                    .attr('height', function(d) { return yScale(yMin) - yScale(d.value); });
+    
+                barFigure.enter()
+                    .append('rect')
+                    .attr('class', 'bar')
+                    .attr('width', barWidth)
+                    .attr('x', function(d) { return xScale(d.name) + xScale.bandwidth() / 2 - barWidth / 2; })
+                    .attr('y', function(d) { return yScale(yMin); })
+                    .attr('fill', d => { return color[d.group]; })
+                    .style('opacity', 0.7)
+                    .on('mouseover', function(d){
+                        d3.select(this).style('opacity', 1);
+                        toolTipdiv.style('display', 'block')
+                                  .style('left', 0 + 'px')
+                                  .style('top', 0 + 'px')
+                                  .attr('class', 'the-tip')
+                                  .html(`<span><div class="square-tip" style="background: ${color[d.group]}"></div><b>${d.name}</b></span><br><span>${yLabel}: ${d.value}</span>`);
+                        let tipHeight = toolTipdiv.node().getBoundingClientRect().height;
+                        let tipWidth = toolTipdiv.node().getBoundingClientRect().width;
+                        let tipX = toolTipdiv.node().getBoundingClientRect().x;
+                        let tipY = toolTipdiv.node().getBoundingClientRect().y;
+                        let barX = d3.select(this).node().getBoundingClientRect().x;
+                        let barY = d3.select(this).node().getBoundingClientRect().y;
+                        let barW = d3.select(this).node().getBoundingClientRect().width;
+                        toolTipdiv.style('left', `${barX-(tipX)-(tipWidth/4)-5}px`).style('top', `${barY-tipY-tipHeight-15}px`)
+    
+                    })
+                    .on('mouseout', function(){
+                        d3.select(this).style('opacity', 0.7);
+                        toolTipdiv.style('display', 'none');
+                        toolTipdiv.selectAll('div').remove();
+                    })
+                    .transition()
+                    .duration(duration)
+                    .attr('y', function(d) { return yScale(d.value); })
+                    .attr('height', function(d) { return yScale(yMin) - yScale(d.value); });
+            }
 
-            barFigure.exit().transition().duration(100).remove();
-
-            barFigure.attr('width', barWidth)
-                .attr('x', function(d) { return xScale(d.name) + xScale.bandwidth() / 2 - barWidth / 2; })
-                .attr('y', function(d) { return yScale(yMin); })
-                .attr('fill', d => { return color[d.group]; })
-                .transition()
-                .duration(duration)
-                .attr('y', function(d) { return yScale(d.value); })
-                .attr('height', function(d) { return yScale(yMin) - yScale(d.value); });
-
-            barFigure.enter()
-                .append('rect')
-                .attr('class', 'bar')
-                .attr('width', barWidth)
-                .attr('x', function(d) { return xScale(d.name) + xScale.bandwidth() / 2 - barWidth / 2; })
-                .attr('y', function(d) { return yScale(yMin); })
-                .attr('fill', d => { console.log(d.group); return color[d.group]; })
-                .on('mouseover', function(d){
-                    // console.log(this);
-                    toolTipdiv.style('display', 'block')
-                              .style('left', 0 + 'px')
-                              .style('top', 0 + 'px')
-                              .attr('class', 'the-tip')
-                              .html(`<span><b>${d.name}</b></span><br><span>${yLabel}: ${d.value}</span>`);
-                    let tipHeight = toolTipdiv.node().getBoundingClientRect().height;
-                    let tipWidth = toolTipdiv.node().getBoundingClientRect().width;
-                    let tipX = toolTipdiv.node().getBoundingClientRect().x;
-                    let tipY = toolTipdiv.node().getBoundingClientRect().y;
-                    let barX = d3.select(this).node().getBoundingClientRect().x;
-                    let barY = d3.select(this).node().getBoundingClientRect().y;
-                    let barW = d3.select(this).node().getBoundingClientRect().width;
-                    toolTipdiv.style('left', `${barX-(tipX)-(tipWidth/4)-5}px`).style('top', `${barY-tipY-tipHeight-15}px`)
-
-                })
-                // .on('mousemove', function(){
-                //     toolTipdiv.style('left', `${mouseX}px`)
-                //               .style('top', `${mouseY}px`);
-                // })
-                .on('mouseout', function(){
-                    // d3.select(this).attr('r', 4);
-                    toolTipdiv.style('display', 'none');
-                    toolTipdiv.selectAll('div').remove();
-                })
-                .transition()
-                .duration(duration)
-                .attr('y', function(d) { return yScale(d.value); })
-                .attr('height', function(d) { return yScale(yMin) - yScale(d.value); });
+            plotCurrentData();
         }
 
         const updateData = function() {
