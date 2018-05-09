@@ -43,8 +43,8 @@ const scatterChart = function(Obj) {
         let mainDivY = mainDiv.getBoundingClientRect().y;
 
         const svg = selection.append('svg').attr('height', height).attr('width', width).attr('id', 'scatter-chart').attr('class', 'scatter');
-        let svgH = parseInt(svg.style('height').substr(0, svg.style('height').length - 2));
-        let svgW = parseInt(svg.style('width').substr(0, svg.style('width').length - 2));
+        let svgH = parseInt(d3.select('#scatter-chart').node().getBoundingClientRect().height);
+        let svgW = parseInt(d3.select('#scatter-chart').node().getBoundingClientRect().width);
         let svgX = svg.node().getBoundingClientRect().x;
         let svgY = svg.node().getBoundingClientRect().y;
         
@@ -75,7 +75,8 @@ const scatterChart = function(Obj) {
             range: [plotStartx, plotStartx + plotW], 
             scaleType: 'linear' });
         const xAxis = axis({ scale: xScale, orient: 'bottom' });
-        const xAxisElement = svg.append('g').attr('class', 'scatter x axis').attr('transform', `translate(0, ${plotStarty + plotH})`);
+        const xAxisElement = svg.append('g').attr('class', 'scatter x axis')
+                                .attr('transform', `translate(0, ${plotStarty + plotH})`);
 
         /* ---------------  Defining Y-axis ------------------- */
         const yScale = scale({ 
@@ -83,7 +84,8 @@ const scatterChart = function(Obj) {
             range: [plotH + plotStarty, plotStarty], 
             scaleType: 'linear' });
         const yAxis = axis({ scale: yScale, ticks: 6, tickformat: 'thousands' });
-        const yAxisElement = svg.append('g').attr('class', 'scatter y axis').attr('transform', `translate( ${margin.left} , 0)`);
+        const yAxisElement = svg.append('g').attr('class', 'scatter y axis')
+                                .attr('transform', `translate( ${margin.left} , 0)`);
 
         let duration = 1000;
         const plotCanvas = svg.append('g').attr('id', 'scatter-plotCanvas');

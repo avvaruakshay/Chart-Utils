@@ -372,7 +372,6 @@ const scale = function(Obj) {
 
 const axis = function(Obj) {
 
-    console.log('Axis function called!');
     let axis;
     let ticks;
     let tickSize;

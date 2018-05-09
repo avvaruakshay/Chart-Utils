@@ -10,12 +10,13 @@ import '../node_modules/bulma-extensions/bulma-checkradio/dist/bulma-checkradio.
 import '../styles/main.css'
 
 import '../node_modules/bulma-extensions/bulma-accordion/dist/bulma-accordion.min.js'
+import { getUniqueElements, getMatchingRows } from './utils.js'
+import { barChart } from './barChart.js'
+import { scatterChart } from './scatterChart.js'
 import { stackData, stackChart } from './stackChart.js'
 import { lineDatum, multilineChart } from './lineChart.js'
 import { pieDatum, pieChart } from './pieChart.js'
-import { scatterChart } from './scatterChart.js'
-import { barChart } from './barChart.js'
-import { getUniqueElements, getMatchingRows } from './utils.js'
+import { boxChart } from './boxChart.js'
 import { drawSlate } from './drawSlate.js'
 
 
@@ -150,6 +151,18 @@ const plotChart = function(chartType){
             chartRoot.call(newPieChart);
         })
     }
+    else if (chartType === 'box') {
+        d3.tsv('../data/iris_data.tsv', function(data){
+            let values = _.map(_.filter(data, o => o.Class === "Iris-setosa"), d => d["Petal length"]);
+            let plotData = [{name: "Petal length", 'values': values}];
+            console.log('This is original data', plotData);
+            const newBoxChart = boxChart().data(plotData);
+            chartRoot.call(newBoxChart);
+
+            d3.selectAll('.box.y.axis > .domain').remove();
+            d3.select('.box.y.axis').selectAll(".tick line").attr("stroke", "#aeaeae").attr("stroke-dasharray", "2,2");
+        })
+    }
     else if (chartType === 'slate') {
         console.log('Slate is activated!')
         drawSlate(chartRoot);
@@ -164,7 +177,7 @@ d3.selectAll('.tab').on('click', function(){
     plotChart(chartType);
 })
 
-document.getElementById('bar').click();
+document.getElementById('box').click();
 
 
 
