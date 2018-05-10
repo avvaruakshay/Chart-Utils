@@ -4,7 +4,24 @@ const d3 = require('d3');
 const _ = require('lodash');
 import { scale, axis, axislabel, rotateXticks, colorPalette } from "./chartUtils.js"
 import { getUniqueElements } from "./utils.js"
+import { typeOfElements, dataTypeof } from "./datahandler.js"
 // import { tooltip } from "./tooltip.js"
+
+const barDatum = function(data){
+    const dtype = dataTypeof(data);
+    if (dtype === "listOfNumbers") {
+        data = _.map(data, function(d, i) { return {name: i, value: parseFloat(d)}; });
+    }
+    else if (dtype === "ObjectNumValues") {
+        let out = [];
+        Object.keys(data).forEach(d => { out.push({name:d, value: parseFloat(data[d])}) });
+        console.log(out);
+        data = out;
+        // delete out; // Can't delete variable in strict mode
+    }
+
+    return data;
+}
 
 /*-- 1. Data format
      data type: list of objects
@@ -44,6 +61,8 @@ const barChart = function() {
             let colors = colorPalette(groups.length, 500);
             for (let i in groups) { color[groups[i]] = colors[i]; }
         }
+        data = barDatum(data);
+        console.log(data);
         data = _.map(data, d => { d.view = 1; return d; });
 
         let yMax = _.max(_.map(data, d => { return d.value }));
@@ -137,6 +156,7 @@ const barChart = function() {
 
                 let yMax = _.max(_.map(currentData, d => { return d.value }));
                 let yMin = _.min(_.map(currentData, d => { return d.value }));
+                yMin = 0;
                 xticks = _.map(currentData, o => { return o.name });
                 xScale.domain(xticks);
                 yScale.domain([yMin, yMax]);
@@ -205,10 +225,12 @@ const barChart = function() {
         const updateData = function() {
 
             duration = 1000;
+            data = barDatum(data);
             data = _.map(data, d => { d.view = 1; return d; });
 
             yMax = _.max(_.map(data, d => { return d.value }));
             yMin = _.min(_.map(data, d => { return d.value }));
+            yMin = 0;
             xticks = _.map(data, o => { return o.name });
 
             xScale.domain(xticks);
@@ -219,8 +241,9 @@ const barChart = function() {
 
         const updateResize = function() {
 
-            svgH = parseInt(svg.style('height').substr(0, svg.style('height').length - 2));
-            svgW = parseInt(svg.style('width').substr(0, svg.style('width').length - 2));
+            svgH = parseInt(d3.select('#bar-chart').node().getBoundingClientRect().height);
+            svgW = parseInt(d3.select('#bar-chart').node().getBoundingClientRect().width);
+            console.log(svgH, svgW);
 
             plotH = svgH - margin.top - margin.bottom;
             plotW = svgW - margin.left - margin.right;
@@ -229,8 +252,9 @@ const barChart = function() {
             xScale.range([plotStartx, plotStartx + plotW]);
             yScale.range([plotH + plotStarty, plotStarty]);
 
+            yAxis.tickSize(-plotW);
+            xAxisElement.attr('transform', `translate(0, ${plotStarty + plotH})`);
             yAxisElement.attr('transform', `translate(${margin.left},0)`);
-            xAxisElement.attr('transform', `translate(0,' ${plotStarty + plotH})`);
 
             draw();
         }

@@ -13,12 +13,17 @@ import '../node_modules/bulma-extensions/bulma-accordion/dist/bulma-accordion.mi
 import { getUniqueElements, getMatchingRows } from './utils.js'
 import { barChart } from './barChart.js'
 import { scatterChart } from './scatterChart.js'
-import { stackData, stackChart } from './stackChart.js'
-import { lineDatum, multilineChart } from './lineChart.js'
+import { stackChart } from './stackChart.js'
+import { multilineChart } from './lineChart.js'
 import { pieDatum, pieChart } from './pieChart.js'
 import { boxChart } from './boxChart.js'
 import { drawSlate } from './drawSlate.js'
+import { dataTypeof } from './datahandler.js'
 
+// dataTypeof(['a', '1', 'b', function(){}, [1,2,3], 7, null]);
+// dataTypeof(['1', '2', '3', '4']);
+// dataTypeof([[1,2,4], [234,1234,123,46]]);
+// dataTypeof([null, null, null]);
 
 const populateTable = function(tableData) {
     d3.select('#data-table').selectAll('*').remove();
@@ -81,7 +86,7 @@ const plotChart = function(chartType){
     if (chartType === "bar") {
         d3.tsv('../data/bar_data.tsv', function(data) {
             const newBarChart = barChart()
-                                .data(data)
+                                .data({a: '1', b: '2', c: '3', d: '4', e: '5', f: '6', g: '7'})
                                 .margin({ top: 40, bottom: 60, left: 80, right: 30 })
                                 .xLabel('Repeats')
                                 .yLabel('Abundance');
@@ -177,7 +182,7 @@ d3.selectAll('.tab').on('click', function(){
     plotChart(chartType);
 })
 
-document.getElementById('box').click();
+document.getElementById('bar').click();
 
 
 
