@@ -84,19 +84,22 @@ const plotChart = function(chartType){
     let chartFunc;
 
     if (chartType === "bar") {
-        d3.tsv('../data/bar_data.tsv', function(data) {
-            const newBarChart = barChart()
-                                .data({a: '1', b: '2', c: '3', d: '4', e: '5', f: '6', g: '7'})
-                                .margin({ top: 40, bottom: 60, left: 80, right: 30 })
-                                .xLabel('Repeats')
-                                .yLabel('Abundance');
+        d3.tsv('./data/bar_data.tsv', function(data) {
+            const newBarChart = barChart().margin({ top: 40, bottom: 60, left: 80, right: 30 });
+
+            // .margin({ top: 40, bottom: 60, left: 80, right: 30 })
+            // .xLabel('Repeats')
+            // .yLabel('Abundance')
+            // .yMax(15).yMin(-2);
             chartRoot.call(newBarChart);
-            d3.selectAll('.bar.y.axis > .domain').remove();
-            d3.select('.bar.y.axis').selectAll(".tick line").attr("stroke", "#aeaeae").attr("stroke-dasharray", "2,2");
+            newBarChart.data({a: '1', b: '2', c: '3', d: '4', e: '-2'})
+
+            // newBarChart.data({banana: 2, apple: 4, orange: 7});
+            // chartRoot.call(newBarChart);            
         });
     }
     else if (chartType === "stack") {
-        d3.tsv('../data/stack_data.tsv', function(data) {
+        d3.tsv('./data/stack_data.tsv', function(data) {
             let keys = _.uniq(_.map(data, d => { return d.repEnd; }));
             data = _.map(data, o => {
                 o[o['repEnd']] = parseInt(o['freq']);
@@ -121,7 +124,7 @@ const plotChart = function(chartType){
         })
     }
     else if (chartType === "scatter")  {
-        d3.tsv( '../data/scatter_data.tsv', function(data) {
+        d3.tsv( './data/scatter_data.tsv', function(data) {
             const newScatterChart = scatterChart()
                                     .margin({top: 40, left: 80, right: 40, bottom: 80})
                                     .data(data)
@@ -132,7 +135,7 @@ const plotChart = function(chartType){
         })
     }
     else if (chartType === "line")  {
-        d3.tsv('../data/line_data.tsv', function(data) {
+        d3.tsv('./data/line_data.tsv', function(data) {
             console.log(data);
             let names = _.map(_.uniqBy(data, 'repClass'), o => { return o.repClass; });
             let units = (_.map(_.uniqBy(data, 'units'), o => { return parseInt(o.units); })).sort();
@@ -151,13 +154,13 @@ const plotChart = function(chartType){
     })
     }
     else if (chartType === 'pie')  {
-        d3.tsv("../data/pie_data.tsv", function(data) {
+        d3.tsv("./data/pie_data.tsv", function(data) {
             const newPieChart = pieChart().data(data).piePosition('center');
             chartRoot.call(newPieChart);
         })
     }
     else if (chartType === 'box') {
-        d3.tsv('../data/iris_data.tsv', function(data){
+        d3.tsv('./data/iris_data.tsv', function(data){
             let values = _.map(_.filter(data, o => o.Class === "Iris-setosa"), d => d["Petal length"]);
             let plotData = [{name: "Petal length", 'values': values}];
             console.log('This is original data', plotData);

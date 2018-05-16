@@ -10,8 +10,11 @@ module.exports = {
     entry: './src/index.js',
 
     plugins: [
-        new webpack.HotModuleReplacementPlugin(),
         new ExtractTextPlugin("styles.css"),
+        new HtmlPlugin({
+            filename: 'index.html',
+            template: './index.html'
+        }),
         extractSass // Enabling HMR
     ],
 
