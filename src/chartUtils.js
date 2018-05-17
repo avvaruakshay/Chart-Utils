@@ -433,7 +433,7 @@ const axislabel = function(Obj) {
     const fontweight = (Obj.fontweight) ? Obj.fontweight : 'light';
     const margin = Obj.margin;
 
-    const axisNode = document.querySelector(axisSelector);
+    const axisNode = axisSelector;
     const translateString = axisNode.getAttribute('transform');
     const axisbox = axisNode.getBBox();
     const translate = getTranslateValue(translateString);

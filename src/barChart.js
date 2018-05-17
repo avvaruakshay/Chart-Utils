@@ -42,6 +42,7 @@ const barChart = function() {
     let color = {};
     let xticks;
     let yMin, yMax;
+    let groups;
     let xScale, xAxis, xAxisElement;
     let yScale, yAxis, yAxisElement;
     let xLabel = "X-axis";
@@ -149,15 +150,13 @@ const barChart = function() {
         // yAxisElement.transition().duration(duration).call(yAxis);
         svg.select('.bar.x.axis').transition().duration(duration).call(xAxis);
         svg.select('.bar.y.axis').transition().duration(duration).call(yAxis);
-        svg.selectAll('.axislabel').remove();
-
-        // console.log(svg.select('.bar.x.axis')['_groups'][0][0]);
-
+        
         setTimeout(function(){
+            svg.selectAll('.axislabel').remove();
             /* -- Adding X-axis label ----------------------------------------------- */
             if (xLabel) {
                 axislabel({
-                    selector: '.bar.x.axis',
+                    selector: svg.select('.bar.x.axis')['_groups'][0][0],
                     orient: 'bottom',
                     fontweight: 'regular',
                     size: '1em',
@@ -170,7 +169,7 @@ const barChart = function() {
             /* -- Adding Y-axis label ----------------------------------------------- */
             if (yLabel) {
                 axislabel({
-                    selector: '.bar.y.axis',
+                    selector: svg.select('.bar.y.axis')['_groups'][0][0],
                     orient: 'left',
                     fontweight: 'regular',
                     size: '1em',
@@ -197,10 +196,10 @@ const barChart = function() {
     }
 
     const addLegend = function(names) {
-        console.log(names)
-        console.log('Legend being added!');
 
         svg.select('.legend').remove();
+
+        console.log(names);
 
         const legend = svg.append('g').attr('class', 'legend').attr('transform', `translate(${margin.left}, ${margin.top})`);
 
@@ -244,11 +243,10 @@ const barChart = function() {
     const updateData = function() {
 
         console.log('Update data called!');
-        svg.select('.nodata-message').remove();
 
         //Handles the grouping and creates color object accordingly.
         //If groups are specified colors are 
-        let groups = _.uniq(_.map(data, 'group'));
+        groups = _.uniq(_.map(data, 'group'));
         if (groups.length == 0) {
             groups = ['default'];
             data = _.map(data, d => { d.group = 'default'; return d; });
@@ -257,20 +255,22 @@ const barChart = function() {
             let colors = colorPalette(groups.length, 500);
             for (let i in groups) { color[groups[i]] = colors[i]; }
         }
-        
-        addLegend(groups);
 
         data = barDatum(data);
         data = _.map(data, d => { d.view = 1; return d; });
         duration = 1000;
-        draw();
+        
+        if (svg) {
+            svg.select('.nodata-message').remove();
+            addLegend(groups);
+            draw();
+        }
     }
     
     const updateResize = function() {
 
         svgH = parseInt(svg.node().getBoundingClientRect().height);
         svgW = parseInt(svg.node().getBoundingClientRect().width);
-        console.log(svgH, svgW);
 
         plotH = svgH - margin.top - margin.bottom;
         plotW = svgW - margin.left - margin.right;
@@ -286,9 +286,8 @@ const barChart = function() {
     }
 
     const chart = function(selection) {
-
+        
         /* - Initialisation of chart even if data is not provided - */
-        console.log(selection);
         svg = selection.append('svg').attr('height', height).attr('width', width).attr('id', 'bar-chart').attr('class', 'bar');
         svgH = svg.node().getBoundingClientRect().height;
         svgW = svg.node().getBoundingClientRect().width;
@@ -349,11 +348,11 @@ const barChart = function() {
         if (windowResize) { 
             window.onresize =  function() { setTimeout(updateResize, 300); };
         }
-        // draw();
+        addLegend(groups);
+        draw();
     }
 
     chart.data = function(_) {
-        console.log('Data has been updated!');
         if (!arguments.length) return data;
         data = _;
         if (typeof updateData === 'function') updateData();

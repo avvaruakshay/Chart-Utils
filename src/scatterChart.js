@@ -99,7 +99,7 @@ const scatterChart = function(Obj) {
             /* -- Adding X-axis label ----------------------------------------------- */
             if (xLabel) {
                 axislabel({
-                    selector: '.scatter.x.axis',
+                    selector: svg.select('.scatter.x.axis')['_groups'][0][0],
                     orient: 'bottom',
                     fontweight: 'regular',
                     size: '1em',
@@ -112,7 +112,7 @@ const scatterChart = function(Obj) {
             /* -- Adding Y-axis label ----------------------------------------------- */
             if (yLabel) {
                 axislabel({
-                    selector: '.scatter.y.axis',
+                    selector: svg.select('.scatter.y.axis')['_groups'][0][0],
                     orient: 'left',
                     fontweight: 'regular',
                     size: '1em',

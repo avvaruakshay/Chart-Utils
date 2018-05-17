@@ -85,19 +85,30 @@ const plotChart = function(chartType){
 
     if (chartType === "bar") {
         d3.tsv('./data/bar_data.tsv', function(data) {
-            const newBarChart = barChart().margin({ top: 40, bottom: 60, left: 80, right: 30 });
-
-            // .margin({ top: 40, bottom: 60, left: 80, right: 30 })
-            newBarChart.xLabel('Items')
-                       .yLabel('Quantity')
-            // .yMax(15).yMin(-2);
+            const newBarChart = barChart().margin({ top: 40, bottom: 60, left: 80, right: 30 })
+                                          .data([
+                                                {name: 'banana', value: -14, group: 'fruit'},
+                                                {name: 'apple', value: -13, group: 'fruit'},
+                                                {name: 'oranges', value: 8, group: 'fruit'},
+                                                {name: 'carrot', value: 9, group: 'vegetable'},
+                                                {name: 'brinjal', value: 12, group: 'vegetable'},
+                                                {name: 'rice', value: 50, group: 'grain'}
+                                          ])
+                                          .xLabel('Items')
+                                          .yLabel('Quantity');
             chartRoot.call(newBarChart);
-            newBarChart.data([{name: 'banana', value: -14, group: 'fruit'}, {name: 'apple', value: -13, group: 'fruit'}, {name: 'oranges', value: 8, group: 'fruit'}, {name: 'carrot', value: 9, group: 'vegetable'}, {name: 'brinjal', value: 12, group: 'vegetable'}, {name: 'rice', value: 50, group: 'grain'}]);
+        //     newBarChart.data([
+        //         {name: 'banana', value: -14, group: 'fruit'},
+        //         {name: 'apple', value: -13, group: 'fruit'},
+        //         {name: 'oranges', value: 8, group: 'fruit'},
+        //         {name: 'carrot', value: 9, group: 'vegetable'},
+        //         {name: 'brinjal', value: 12, group: 'vegetable'}
+        //   ])
             setTimeout(function(){
                 console.log('Second chart plotting!');
-                const barChart2 = barChart();
+                const barChart2 = barChart().margin({ top: 40, bottom: 60, left: 80, right: 30 });
                 chartRoot1.call(barChart2);
-                barChart2.data({a: '1', b: '2', c: '3', d: '4', e: '-2'})
+                barChart2.data({a: '1', b: '2', c: '3', d: '4', e: '-2'});
             }, 2000);
             
         });
@@ -130,8 +141,8 @@ const plotChart = function(chartType){
     else if (chartType === "scatter")  {
         d3.tsv( './data/scatter_data.tsv', function(data) {
             const newScatterChart = scatterChart()
-                                    .margin({top: 40, left: 80, right: 40, bottom: 80})
                                     .data(data)
+                                    .margin({top: 40, left: 80, right: 40, bottom: 80})
                                     .xLabel('Genome size(MB)')
                                     .yLabel('SSR density');
             
