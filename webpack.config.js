@@ -8,6 +8,7 @@ const extractSass = new ExtractTextPlugin({
 
 module.exports = {
     entry: './src/index.js',
+    mode: 'development',
 
     plugins: [
         new ExtractTextPlugin("styles.css"),

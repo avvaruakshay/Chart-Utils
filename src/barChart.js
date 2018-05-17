@@ -5,7 +5,6 @@ const _ = require('lodash');
 import { scale, axis, axislabel, rotateXticks, colorPalette } from "./chartUtils.js"
 import { getUniqueElements } from "./utils.js"
 import { typeOfElements, dataTypeof } from "./datahandler.js"
-// import { tooltip } from "./tooltip.js"
 
 const barDatum = function(data){
     const dtype = dataTypeof(data);
@@ -15,7 +14,6 @@ const barDatum = function(data){
     else if (dtype === "ObjectNumValues") {
         let out = [];
         Object.keys(data).forEach(d => { out.push({name:d, value: parseFloat(data[d])}) });
-        console.log(out);
         data = out;
         // delete out; // Can't delete variable in strict mode
     }
@@ -55,18 +53,19 @@ const barChart = function() {
     let duration = 1000;
     
     const plotCurrentData = function() {
-        let currentData = _.filter(data, o => { return o.view = 1 });
+        let currentData = _.filter(data, o => { return o.view === 1; });
 
-        yMax = _.max(_.map(data, d => { return d.value }));
-        yMin = _.min(_.map(data, d => { return d.value }));
+        yMax = _.max(_.map(currentData, d => { return d.value }));
+        yMin = _.min(_.map(currentData, d => { return d.value }));
         yMin = (yMin < 0) ? yMin : 0;
         yMax += 0.05*(yMax - yMin);
-        yMin -= 0.05*(yMax - yMin);
+        yMin = (yMin >= 0) ? yMin : yMin - 0.05*(yMax - yMin);
         xticks = _.map(currentData, o => { return o.name });
         xScale.domain(xticks);
         yScale.domain([yMin, yMax]);
-        svg.select('.bar.x.axis').call(xAxis)
-        svg.select('.bar.y.axis').call(yAxis);
+        svg.select('.bar.x.axis').transition().duration(duration).call(xAxis);
+        svg.select('.bar.y.axis').transition().duration(duration).call(yAxis);
+        // svg.select('.bar.y.axis').call(yAxis);
 
         let barWidth;
         if (xScale.bandwidth() <= 100) {
@@ -77,15 +76,24 @@ const barChart = function() {
 
         const barFigure = plotCanvas.selectAll('rect').data(currentData);
 
-        barFigure.exit().transition().duration(100).remove();
+        barFigure.exit()
+                //  .transition().duration(500)
+                //  .attr('y', yScale(0))
+                //  .attr('height', function(d, i){
+                //      let prevH = d3.select(this).attr('height');
+                //      return Math.abs(prevH - yScale(0));
+                //  })
+                 .remove();
 
         barFigure.attr('width', barWidth)
             .attr('x', function(d) { return xScale(d.name) + xScale.bandwidth() / 2 - barWidth / 2; })
-            .attr('y', function(d) { return yScale(0); })
             .attr('fill', d => { return color[d.group]; })
             .transition()
             .duration(duration)
-            .attr('y', function(d) { return yScale(d.value); })
+            .attr('y', function(d) { 
+                let t = ( d.value >= 0 ) ? d.value : 0;
+                return yScale(t);
+            })
             .attr('height', function(d) { 
                 let h = yScale(0) - yScale(d.value); 
                 return Math.sqrt(h*h);
@@ -97,6 +105,7 @@ const barChart = function() {
             .attr('width', barWidth)
             .attr('x', function(d) { return xScale(d.name) + xScale.bandwidth() / 2 - barWidth / 2; })
             .attr('y', function(d) { return yScale(0); })
+            .attr('height', 0)
             .attr('fill', d => { return color[d.group]; })
             .style('opacity', 0.7)
             .on('mouseover', function(d){
@@ -124,7 +133,7 @@ const barChart = function() {
             .transition()
             .duration(duration)
             .attr('y', function(d) { 
-                let t = ( d.value > 0 ) ? d.value : 0;
+                let t = ( d.value >= 0 ) ? d.value : 0;
                 return yScale(t);
             })
             .attr('height', function(d) {  
@@ -135,47 +144,122 @@ const barChart = function() {
 
     const draw = function() {
         
-        svg.select('.bar.x.axis').call(xAxis);
-        svg.select('.bar.y.axis').call(yAxis);
+        
+        // xAxisElement.transition().duration(duration).call(xAxis);
+        // yAxisElement.transition().duration(duration).call(yAxis);
+        svg.select('.bar.x.axis').transition().duration(duration).call(xAxis);
+        svg.select('.bar.y.axis').transition().duration(duration).call(yAxis);
         svg.selectAll('.axislabel').remove();
+
+        // console.log(svg.select('.bar.x.axis')['_groups'][0][0]);
+
+        setTimeout(function(){
+            /* -- Adding X-axis label ----------------------------------------------- */
+            if (xLabel) {
+                axislabel({
+                    selector: '.bar.x.axis',
+                    orient: 'bottom',
+                    fontweight: 'regular',
+                    size: '1em',
+                    distance: xlabelDistance,
+                    text: xLabel,
+                    margin: margin
+                });
+            }
+            
+            /* -- Adding Y-axis label ----------------------------------------------- */
+            if (yLabel) {
+                axislabel({
+                    selector: '.bar.y.axis',
+                    orient: 'left',
+                    fontweight: 'regular',
+                    size: '1em',
+                    distance: ylabelDistance,
+                    text: yLabel,
+                    margin: margin
+                });
+            }
+        }, duration);
         
-        /* -- Adding X-axis label ----------------------------------------------- */
-        if (xLabel) {
-            axislabel({
-                selector: '.bar.x.axis',
-                orient: 'bottom',
-                fontweight: 'regular',
-                size: '1em',
-                distance: xlabelDistance,
-                text: xLabel,
-                margin: margin
-            });
-        }
-        
-        /* -- Adding Y-axis label ----------------------------------------------- */
-        if (yLabel) {
-            axislabel({
-                selector: '.bar.y.axis',
-                orient: 'left',
-                fontweight: 'regular',
-                size: '1em',
-                distance: ylabelDistance,
-                text: yLabel,
-                margin: margin
-            });
-        }
 
         plotCurrentData();
-        d3.selectAll('.bar.y.axis > .domain').remove();
-        d3.select('.bar.y.axis').selectAll(".tick line")
-                                .attr("stroke", "#aeaeae")
-                                .attr("stroke-dasharray", "2, 2");
+        svg.selectAll('.bar.y.axis > .domain').remove();
+        svg.select('.bar.y.axis').selectAll(".tick line")
+                                .attr("stroke", function(d, i) {
+                                    if (d === 0) { return 'black'; }
+                                    else { return "#aeaeae";}
+                                 })
+                                .attr("stroke-dasharray", function(d, i) {
+                                    if (d === 0) { return 'none'; }
+                                    else { return "2, 3";}
+                                 });
+        svg.select('.bar.x.axis > .domain').remove();
+    }
+
+    const addLegend = function(names) {
+        console.log(names)
+        console.log('Legend being added!');
+
+        svg.select('.legend').remove();
+
+        const legend = svg.append('g').attr('class', 'legend').attr('transform', `translate(${margin.left}, ${margin.top})`);
+
+        const labels = legend.selectAll('.legend-label').data(names);
+        const labelsEnter = labels.enter().append('g').attr('class', 'legend-label').style('cursor', 'pointer');
+        labelsEnter.append('circle').attr('class', 'label-circle').attr('r', 4).attr('fill', function(d){ return color[d]; })
+        labelsEnter.append('text').attr('class', 'label-text')
+                   .attr('transform', 'translate(8, 4)')
+                   .attr('text-anchor', 'start').text(function(d) {return d});
+
+        let prevWidth = 0;
+        legend.selectAll('.legend-label').attr('transform', function(d,i){
+            const labelW = d3.select(this).node().getBoundingClientRect().width;
+            const labelH = d3.select(this).node().getBoundingClientRect().height;
+            const translateX = prevWidth;
+            const translateY = 0;
+            prevWidth += labelW + 15;
+            return `translate(${translateX}, ${translateY})`;
+        });
+
+        legend.selectAll('.legend-label').on('click', function(d) {
+            data = _.map(data, o => {
+                if (o.group === d){ o.view = (o.view === 1) ? 0 : 1; }
+                return o;
+            });
+            const cc = d3.select(this).select('.label-circle').attr('fill');
+            if (cc === 'grey') {d3.select(this).select('.label-circle').attr('fill', o => {return color[d];})}
+            else {d3.select(this).select('.label-circle').attr('fill', 'grey')}
+            draw();
+        })
+
+        // plotStarty += d3.select('.legend').node().getBoundingClientRect().height;
+        // plotH -= (d3.select('.legend').node().getBoundingClientRect().height + 20);
+        // yScale.range([plotH + plotStarty, plotStarty]);
+
+        // xAxisElement.attr('transform', `translate(0, ${plotStarty + plotH})`);
+        // yAxisElement.attr('transform', `translate(${margin.left},0)`);
+
     }
     
     const updateData = function() {
 
         console.log('Update data called!');
-        d3.select('.nodata-message').remove();
+        svg.select('.nodata-message').remove();
+
+        //Handles the grouping and creates color object accordingly.
+        //If groups are specified colors are 
+        let groups = _.uniq(_.map(data, 'group'));
+        if (groups.length == 0) {
+            groups = ['default'];
+            data = _.map(data, d => { d.group = 'default'; return d; });
+            color = { 'default': colorPalette(1, 700) };
+        } else {
+            let colors = colorPalette(groups.length, 500);
+            for (let i in groups) { color[groups[i]] = colors[i]; }
+        }
+        
+        addLegend(groups);
+
         data = barDatum(data);
         data = _.map(data, d => { d.view = 1; return d; });
         duration = 1000;
@@ -204,7 +288,7 @@ const barChart = function() {
     const chart = function(selection) {
 
         /* - Initialisation of chart even if data is not provided - */
-
+        console.log(selection);
         svg = selection.append('svg').attr('height', height).attr('width', width).attr('id', 'bar-chart').attr('class', 'bar');
         svgH = svg.node().getBoundingClientRect().height;
         svgW = svg.node().getBoundingClientRect().width;
@@ -215,19 +299,6 @@ const barChart = function() {
         plotW = svgW - margin.left - margin.right; // Calculating the actual height of the plot
         plotStartx = margin.left; // X-coordinate of the start of the plot
         plotStarty = margin.top; // Y-coordinate of the start of the plot
-
-        
-
-        //Handles the grouping and creates color object accordingly.
-        //If groups are specified colors are 
-        // let groups = _.uniq(_.map(data, 'group'));
-        // if (groups.length == 0) {
-        //     data = _.map(data, d => { d.group = 'default'; return d; });
-        //     color = { 'default': colorPalette(1, 700) };
-        // } else {
-        //     let colors = colorPalette(groups.length, 500);
-        //     for (let i in groups) { color[groups[i]] = colors[i]; }
-        // }
 
         /* -- Defining the scale for Y-axis ----------------------------------------- */
         yScale = scale({
@@ -275,9 +346,9 @@ const barChart = function() {
         }
         
         
-        if (windowResize) { window.onresize = function() {
-            console.log('Window resized!');
-            setTimeout(updateResize, 300); }}
+        if (windowResize) { 
+            window.onresize =  function() { setTimeout(updateResize, 300); };
+        }
         // draw();
     }
 
@@ -355,6 +426,11 @@ const barChart = function() {
         return chart;
     }
 
+    chart.xticks = function(_) {
+        if (!arguments.length) return xticks;
+        xticks = _;
+        return xticks;
+    }
 
     return chart;
 }
